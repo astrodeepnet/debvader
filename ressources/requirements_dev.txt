@@ -1,6 +1,6 @@
 wheel==0.33.1
 pip==19.0.3
-numpy
+numpy>=1.11
 pandas
 tensorflow==2.1.0
 tensorflow-probability==0.9.0
