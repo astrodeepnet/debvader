@@ -8,5 +8,6 @@ setup(
     packages=['debvader'],
     install_requires=['numpy'],
     version='0.1',
-    description="Galaxy deblender from variational autoencoders"
+    description="Galaxy deblender from variational autoencoders",
+    # long_description=open('README.txt').read(),
     )
