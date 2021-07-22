@@ -16,11 +16,11 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-requirements = ["numpy>=1.11","tensorflow==2.1.0"]
+requirements = ["numpy>=1.11","tensorflow==2.1.0","tensorflow-probability==0.9.0"]
 
 setup(
     name="debvader",
-    version="0.0.3",
+    version="0.0.31",
     author="Bastien Arcelin, Cyrille Doux, Biswajit Biswas",
     author_email="arcelin@apc.in2p3.fr",
     description="Galaxy deblender from variational autoencoders",
