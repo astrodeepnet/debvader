@@ -1,4 +1,4 @@
-numpy
+numpy>=1.11
 pandas
 tensorflow==2.1.0
 tensorflow-probability==0.9.0
