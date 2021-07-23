@@ -1,4 +1,9 @@
-from deblender.tools import model, 
+import tensorflow as tf
+import tensorflow.keras.backend as K
+
+import sys  
+sys.path.insert(0, '../tools/')
+import model
 
 def convert(my_name):
     """
@@ -18,11 +23,17 @@ def load_deblender(survey):
     parameters:
         survey: string calling the particular dataset
     """
-    net = model.create_model_wo_ls_peak_pooling_vae_4(input_shape, latent_dim, hidden_dim, filters, kernels, final_dim, conv_activation=None, dense_activation=None)
+    input_shape = (59, 59, nb_of_bands)
+    hidden_dim = 256
+    latent_dim = 32
+    final_dim = 2
+    filters = [32,64,128,256]
+    kernels = [3,3,3,3]
+
+    net = model.create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, final_dim, conv_activation=None, dense_activation=None)
 
     def vae_loss(x, x_decoded_mean):
         xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
-        #x_res = K.mean(K.sum(K.binary_crossentropy(x, x-x_decoded_mean), axis=[1,2,3]))
         return xent_loss
 
     net.compile(optimizer=tf.optimizers.Adam(learning_rate=1e-4), 
