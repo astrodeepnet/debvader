@@ -1,76 +1,99 @@
 # Import necessary librairies
 
 import numpy as np
-
-import sys
-import os
-
-import tensorflow as tf
 import tensorflow.keras
-from tensorflow.keras.layers import  Layer
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Conv2D, Input, Dense, Flatten,  Reshape, Cropping2D, Conv2DTranspose, PReLU, Lambda, BatchNormalization
-import tensorflow_probability as tfp
-tfd = tfp.distributions
+import pandas as pd
 
 
-
-def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None):
+class BatchGenerator_vae(tensorflow.keras.utils.Sequence):
     """
-    Create the VAE model
-    parameters:
-        input_shape: shape of input tensor
-        latent_dim: size of the latent space
-        hidden_dim: size of the two dense layers before and after the latent space
-        filters: filters used for the convolutional layers
-        kernels: kernels used for the convolutional layers
+    Class to create batch generator for the VAE.
     """
-    # Define the prior for the latent space
-    prior = tfd.Independent(tfd.Normal(loc=tf.zeros(latent_dim), scale=1),
-                        reinterpreted_batch_ndims=1)
-    
-    # Input layer
-    input_layer = Input(shape=(input_shape)) 
+    def __init__(self, bands, list_of_samples, total_sample_size, batch_size, list_of_weights_e):
+        """
+        Initialization function
+        total_sample_size: size of the whole training (or validation) sample
+        batch_size: size of the batches to provide
+        list_of_samples: list of the numpy arrays which correspond to the whole training (or validation) sample
+        training_or_validation: choice between training of validation generator
+        x: input of the neural network
+        y: target of the neural network
+        r: random value to sample into the validation sample
+        """
+        self.bands = bands
+        self.total_sample_size = total_sample_size
+        self.batch_size = batch_size
+        self.list_of_samples = list_of_samples
+        
+        self.epoch = 0
 
-    # Define the model
-    h = BatchNormalization()(input_layer)
-    for i in range(len(filters)):
-        h = Conv2D(filters[i], (kernels[i],kernels[i]), activation=None, padding='same')(h)
-        h = PReLU()(h)
-        h = Conv2D(filters[i], (kernels[i],kernels[i]), activation=None, padding='same', strides=(2,2))(h)
-        h = PReLU()(h)
+        # Weights computed from the lengths of lists
+        self.p = []
+        for sample in self.list_of_samples:
+            temp = np.load(sample, mmap_mode = 'c')
+            self.p.append(float(len(temp)))
+        self.p = np.array(self.p)
+        self.total_sample_size = int(np.sum(self.p))
+        print("[BatchGenerator] total_sample_size = ", self.total_sample_size)
+        print("[BatchGenerator] len(list_of_samples) = ", len(self.list_of_samples))
 
-    h = Flatten()(h)
-    h = PReLU()(h)
-    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32),
-                activation=None)(h)
-    h = tfp.layers.MultivariateNormalTriL(32,activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01))(tf.cast(h,tf.float32))
-    
-    h = PReLU()(h)
-    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h)
-    h = PReLU()(h)
-    w = int(np.ceil(input_shape[0]/2**(len(filters))))
-    h = Dense(w*w*filters[-1], activation=dense_activation)(tf.cast(h,tf.float32))
-    h = PReLU()(h)
-    h = Reshape((w,w,filters[-1]))(h)
-    for i in range(len(filters)-1,-1,-1):
-        h = Conv2DTranspose(filters[i], (kernels[i],kernels[i]), activation=conv_activation, padding='same', strides=(2,2))(h)
-        h = PReLU()(h)
-        h = Conv2DTranspose(filters[i], (kernels[i],kernels[i]), activation=conv_activation, padding='same')(h)
-        h = PReLU()(h)
-    h = Conv2D(input_shape[-1], (3,3), activation='relu', padding='same')(h)
+        self.p /= np.sum(self.p)
 
-    # In case the last convolutional layer does not provide an image of the size of the input image, cropp it.
-    cropping = int(h.get_shape()[1]-input_shape[0])
-    if cropping>0:
-        print('in cropping')
-        if cropping % 2 == 0:
-            h = Cropping2D(cropping/2)(h)
+        self.produced_samples = 0
+        self.list_of_weights_e = list_of_weights_e
+        #self.shifts = shifts
+
+    def __len__(self):
+        """
+        Function to define the length of an epoch
+        """
+        return int(float(self.total_sample_size) / float(self.batch_size))      
+
+    def on_epoch_end(self):
+        """
+        Function executed at the end of each epoch
+        """
+        # indices = 0
+        #print("Produced samples", self.produced_samples)
+        self.produced_samples = 0
+        
+    def __getitem__(self, idx):
+        """
+        Function which returns the input and target batches for the network
+        """
+        # If the generator is a training generator, the whole sample is displayed
+        sample_filename = np.random.choice(self.list_of_samples, p=self.p)
+
+        sample = np.load(sample_filename, mmap_mode = 'c')
+        sample_dc2 = np.load(sample_filename.replace('img_noiseless_sample','img_cropped_sample'), mmap_mode = 'c')
+        
+        if self.list_of_weights_e == None:
+            indices = np.random.choice(new_data.index, size=self.batch_size, replace=False, p = None)
         else:
-            h = Cropping2D(((cropping//2,cropping//2+1),(cropping//2,cropping//2+1)))(h)
+            self.weights_e = np.load(self.list_of_weights_e[index])
+            indices = np.random.choice(new_data.index, size=self.batch_size, replace=False, p = self.weights_e/np.sum(self.weights_e))
 
-    # Generate the model
-    model = Model(input_layer,h)
+        self.produced_samples += len(indices)
+        
+        x_1 = np.tanh(np.arcsinh(sample_dc2[indices][:,:,:,self.bands]))
+        x_2 = np.tanh(np.arcsinh(sample[indices][:,:,:,self.bands]))
 
-    return model
-
+        #flip : flipping the image array
+        rand = np.random.randint(4)
+        if rand == 1: 
+            x_1 = np.flip(x_1, axis=2)
+            x_2 = np.flip(x_2, axis=2)
+        elif rand == 2:
+            x_1 = np.swapaxes(x_1, 2, 1)
+            x_2 = np.swapaxes(x_2, 2, 1)
+        elif rand == 3:
+            x_1 = np.swapaxes(np.flip(x_1, axis=2), 2, 1)
+            x_2 = np.swapaxes(np.flip(x_2, axis=2), 2, 1)
+        if len(self.bands)==1:
+            x_1 = np.expand_dims(x_1, axis=-1)
+            x_2 = np.expand_dims(x_2, axis=-1)
+    
+        if sample == "noiseless":
+            return x_2, x_2
+        if sample == "noisy":
+            return x_1, x_2
