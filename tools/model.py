@@ -11,14 +11,29 @@ from tensorflow.keras.layers import  Layer
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv2D, Input, Dense, Flatten,  Reshape, Cropping2D, Conv2DTranspose, PReLU, Lambda, BatchNormalization
 import tensorflow_probability as tfp
+tfd = tfp.distributions
 
 
-def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, final_dim, conv_activation=None, dense_activation=None):
-    input_layer_1 = Input(shape=(input_shape)) 
-    input_layer_2 = Input(shape=(input_shape)) 
 
-    h = BatchNormalization()(input_layer_1)
-    h_2 = input_layer_2
+def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None):
+    """
+    Create the VAE model
+    parameters:
+        input_shape: shape of input tensor
+        latent_dim: size of the latent space
+        hidden_dim: size of the two dense layers before and after the latent space
+        filters: filters used for the convolutional layers
+        kernels: kernels used for the convolutional layers
+    """
+    # Define the prior for the latent space
+    prior = tfd.Independent(tfd.Normal(loc=tf.zeros(latent_dim), scale=1),
+                        reinterpreted_batch_ndims=1)
+    
+    # Input layer
+    input_layer = Input(shape=(input_shape)) 
+
+    # Define the model
+    h = BatchNormalization()(input_layer)
     for i in range(len(filters)):
         h = Conv2D(filters[i], (kernels[i],kernels[i]), activation=None, padding='same')(h)
         h = PReLU()(h)
@@ -30,8 +45,6 @@ def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, fina
     h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32),
                 activation=None)(h)
     h = tfp.layers.MultivariateNormalTriL(32,activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01))(tf.cast(h,tf.float32))
-    
-    
     
     h = PReLU()(h)
     h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h)
@@ -47,6 +60,7 @@ def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, fina
         h = PReLU()(h)
     h = Conv2D(input_shape[-1], (3,3), activation='relu', padding='same')(h)
 
+    # In case the last convolutional layer does not provide an image of the size of the input image, cropp it.
     cropping = int(h.get_shape()[1]-input_shape[0])
     if cropping>0:
         print('in cropping')
@@ -55,8 +69,8 @@ def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, fina
         else:
             h = Cropping2D(((cropping//2,cropping//2+1),(cropping//2,cropping//2+1)))(h)
 
-
-    model = Model([input_layer_1, input_layer_2],h)
+    # Generate the model
+    model = Model(input_layer,h)
 
     return model
 
