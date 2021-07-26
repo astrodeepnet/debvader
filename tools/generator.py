@@ -9,22 +9,22 @@ class BatchGenerator_vae(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the VAE.
     """
-    def __init__(self, bands, list_of_samples, total_sample_size, batch_size, list_of_weights_e):
+    def __init__(self, bands, list_of_samples, sample, total_sample_size, batch_size, list_of_weights_e=None):
         """
         Initialization function
-        total_sample_size: size of the whole training (or validation) sample
-        batch_size: size of the batches to provide
-        list_of_samples: list of the numpy arrays which correspond to the whole training (or validation) sample
-        training_or_validation: choice between training of validation generator
-        x: input of the neural network
-        y: target of the neural network
-        r: random value to sample into the validation sample
+        parameters:
+            bands: list of bands. It must be a tuple. 
+            list_of_samples: list of the numpy arrays which correspond to the whole training (or validation) sample
+            sample: choice between noisy or noiseless data, the two accepted input are 'noisy' or 'noiseless'. It must be a string.
+            batch_size: size of the batches to feed the network
+            total_sample_size: size of the whole training, validation, or test sample
+            list_of_weights_e: list of weights to apply to the images (not required)
         """
         self.bands = bands
         self.total_sample_size = total_sample_size
         self.batch_size = batch_size
         self.list_of_samples = list_of_samples
-        
+        self.sample = sample
         self.epoch = 0
 
         # Weights computed from the lengths of lists
@@ -93,7 +93,7 @@ class BatchGenerator_vae(tensorflow.keras.utils.Sequence):
             x_1 = np.expand_dims(x_1, axis=-1)
             x_2 = np.expand_dims(x_2, axis=-1)
     
-        if sample == "noiseless":
+        if self.sample == "noiseless":
             return x_2, x_2
-        if sample == "noisy":
+        if self.sample == "noisy":
             return x_1, x_2

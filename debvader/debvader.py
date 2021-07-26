@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras.backend as K
+import numpy as np
 
 import pathlib
 import sys  
@@ -51,3 +52,22 @@ def load_deblender(survey, input_shape, hidden_dim, latent_dim, filters, kernels
     net.load_weights(latest)
 
     return net
+
+
+def deblend(net, images):
+    """
+    Deblend the image using the network
+    parameters:
+        net: network to test 
+        images: array of images. It can contain only one image.
+    """
+    # Normalize the images
+    images_normed = np.tanh(np.arcsinh(images))
+
+    # Deblend images
+    output_images = net(tf.cast(images, tf.float32))
+
+    # Denorm outputed images
+    images_deblended = np.sinh(np.arctanh(K.get_value(output_images)))
+
+    return images_deblended
