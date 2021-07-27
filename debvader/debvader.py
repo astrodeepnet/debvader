@@ -64,10 +64,7 @@ def deblend(net, images):
     # Normalize the images
     images_normed = np.tanh(np.arcsinh(images))
 
-    # Deblend images
-    output_images = net(tf.cast(images, tf.float32))
-
-    # Denorm outputed images
-    images_deblended = np.sinh(np.arctanh(K.get_value(output_images)))
+    # Denorm deblended images
+    images_deblended = np.sinh(np.arctanh(net.predict(images_normed)))
 
     return images_deblended
