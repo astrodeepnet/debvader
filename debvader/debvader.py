@@ -1,12 +1,11 @@
 import tensorflow as tf
 import tensorflow.keras.backend as K
 import numpy as np
+import os 
+path_folder = os.path.dirname(os.path.abspath(__file__))
 
-import pathlib
-import sys  
-path_folder = pathlib.Path().resolve()
-sys.path.insert(0, str(path_folder)+'/tools/')
-import model
+import debvader
+from debvader import model
 
 
 def convert(my_name):

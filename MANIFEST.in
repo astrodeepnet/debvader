@@ -1,0 +1,4 @@
+include debvader/weights/dc2/checkpoint
+include debvader/weights/dc2/weights_noisy_v4.304-898.88.ckpt.data-00000-of-00002
+include debvader/weights/dc2/weights_noisy_v4.304-898.88.ckpt.data-00001-of-00002
+include debvader/weights/dc2/weights_noisy_v4.304-898.88.ckpt.index
