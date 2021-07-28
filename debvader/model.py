@@ -44,10 +44,10 @@ def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv
     h = PReLU()(h)
     h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32),
                 activation=None)(h)
-    h = tfp.layers.MultivariateNormalTriL(32,activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01))(tf.cast(h,tf.float32))
+    h_2 = tfp.layers.MultivariateNormalTriL(32,activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01))(tf.cast(h,tf.float32))
     
-    h = PReLU()(h)
-    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h)
+    h_3 = PReLU()(h_2)
+    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h_3)
     h = PReLU()(h)
     w = int(np.ceil(input_shape[0]/2**(len(filters))))
     h = Dense(w*w*filters[-1], activation=dense_activation)(tf.cast(h,tf.float32))
@@ -71,6 +71,8 @@ def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv
 
     # Generate the model
     model = Model(input_layer,h)
+    encoder = Model(input_layer,h_2)
+    decoder = Model(h_3,h)
 
-    return model
+    return model, encoder, decoder
 

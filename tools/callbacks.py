@@ -83,3 +83,9 @@ class changelr(Callback):
 #            "Valid Acc": acc_valid})
 #         self.epoch +=1
 
+# def train_debvader(dataset, input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None):
+#     """
+
+#     """
+#     # Create the model
+#     net, encoder, decoder = model.create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None)
