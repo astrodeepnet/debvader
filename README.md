@@ -32,8 +32,13 @@ pip install --index-url https://test.pypi.org/simple/ debvader
 ```
 
 ## Authors
+
 - [Bastien Arcelin](https://github.com/BastienArcelin) - arcelin at apc.in2p3.fr
 - [Cyrille Doux](https://github.com/xuod)
 - [Thomas Sainrat](https://github.com/thuiop)
 - [Biswajit Biswas](https://github.com/b-biswas)
 - [Alexandre Boucaud](https://github.com/aboucaud)
+
+## License
+
+BSD 3-Clause license, see the [LICENSE file](LICENSE) for more information
