@@ -1,7 +1,9 @@
+import os
+
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
-import numpy as np
-import os 
+
 path_folder = os.path.dirname(os.path.abspath(__file__))
 
 import debvader
@@ -19,20 +21,31 @@ def load_deblender(survey, input_shape, latent_dim, filters, kernels):
         kernels: kernels used for the convolutional layers
     """
     # Create the model
-    net = model.create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None)
+    net = model.create_model_vae(
+        input_shape,
+        latent_dim,
+        filters,
+        kernels,
+        conv_activation=None,
+        dense_activation=None,
+    )
 
     # Define the loss function
     def vae_loss(x, x_decoded_mean):
-        xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
+        xent_loss = K.mean(
+            K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1, 2, 3])
+        )
         return xent_loss
 
     # Compile the model
-    net.compile(optimizer=tf.optimizers.Adam(learning_rate=1e-4), 
-              loss=vae_loss,
-              experimental_run_tf_function=False)
+    net.compile(
+        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        loss=vae_loss,
+        experimental_run_tf_function=False,
+    )
 
     # Load the weights corresponding to the chosen survey
-    loading_path = str(path_folder)+'/data/weights/'+survey+'/'
+    loading_path = str(path_folder) + "/data/weights/" + survey + "/"
     latest = tf.train.latest_checkpoint(loading_path)
     net.load_weights(latest)
 
@@ -43,7 +56,7 @@ def deblend(net, images):
     """
     Deblend the image using the network
     parameters:
-        net: network to test 
+        net: network to test
         images: array of images. It can contain only one image.
     """
     # Normalize the images
