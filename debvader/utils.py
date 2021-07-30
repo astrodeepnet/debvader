@@ -1,35 +1,10 @@
-import cmath as cm
-import logging
-import math
 import os
-import random
-import sys
 
-import galsim
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras
-from scipy.stats import norm
-from tensorflow.keras import backend as K
-from tensorflow.keras import metrics
-from tensorflow.keras.layers import (
-    Add,
-    BatchNormalization,
-    Conv2D,
-    Conv2DTranspose,
-    Dense,
-    Flatten,
-    Input,
-    Lambda,
-    Layer,
-    Multiply,
-    PReLU,
-    Reshape,
-)
-from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.models import Model
 
-from . import layers, model, plot, vae_functions
+from . import model, plot, vae_functions
 
 I_lsst = np.array([255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
 I_euclid = np.array([5925.8097, 3883.7892, 1974.2465, 413.3895])
@@ -111,7 +86,8 @@ def compute_blendedness_single(image1, image2):
     ----------
     img, img_new : GalSim images convolved with its PSF and drawn in its filter
     """
-    if isinstance(image1, galsim.image.Image):
+    from galsim.image import Image
+    if isinstance(image1, Image):
         im1 = np.array(image1.array.data)
         im2 = np.array(image2.array.data)
     else:
@@ -123,7 +99,8 @@ def compute_blendedness_single(image1, image2):
 
 
 def compute_blendedness_total(img_central, img_others):
-    if isinstance(img_central, galsim.image.Image):
+    from galsim.image import Image
+    if isinstance(img_central, Image):
         ic = np.array(img_central.array.data)
         io = np.array(img_others.array.data)
     else:
@@ -138,7 +115,8 @@ def compute_blendedness_total(img_central, img_others):
 
 
 def compute_blendedness_aperture(img_central, img_others, radius):
-    if isinstance(img_central, galsim.image.Image):
+    from galsim.image import Image
+    if isinstance(img_central, Image):
         ic = np.array(img_central.array.data)
         io = np.array(img_others.array.data)
     else:
@@ -372,7 +350,6 @@ from tqdm import tqdm, trange
 
 def apply_ntimes(func, n, args, verbose=True, timeout=None):
     """
-    Applies `n` times the function `func` on `args` (useful if, eg, `func` is partly random).
     Parameters
     ----------
     func : function

@@ -1,11 +1,5 @@
-# Import necessary librairies
-
-import os
-import sys
-
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras
 import tensorflow_probability as tfp
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -15,8 +9,6 @@ from tensorflow.keras.layers import (
     Dense,
     Flatten,
     Input,
-    Lambda,
-    Layer,
     PReLU,
     Reshape,
 )
