@@ -13,24 +13,21 @@ from tensorflow.keras.layers import Conv2D, Input, Dense, Flatten,  Reshape, Cro
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 
-
-
-def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None):
+def create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None):
     """
     Create the VAE model
     parameters:
         input_shape: shape of input tensor
         latent_dim: size of the latent space
-        hidden_dim: size of the two dense layers before and after the latent space
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
     """
     # Define the prior for the latent space
     prior = tfd.Independent(tfd.Normal(loc=tf.zeros(latent_dim), scale=1),
                         reinterpreted_batch_ndims=1)
-    
+
     # Input layer
-    input_layer = Input(shape=(input_shape)) 
+    input_layer = Input(shape=(input_shape))
 
     # Define the model
     h = BatchNormalization()(input_layer)
@@ -42,12 +39,12 @@ def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv
 
     h = Flatten()(h)
     h = PReLU()(h)
-    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32),
+    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(latent_dim),
                 activation=None)(h)
-    h_2 = tfp.layers.MultivariateNormalTriL(32,activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01))(tf.cast(h,tf.float32))
-    
-    h_3 = PReLU()(h_2)
-    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h_3)
+    z = tfp.layers.MultivariateNormalTriL(latent_dim,activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01))(tf.cast(h,tf.float32))
+
+    h = PReLU()(z)
+    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h)
     h = PReLU()(h)
     w = int(np.ceil(input_shape[0]/2**(len(filters))))
     h = Dense(w*w*filters[-1], activation=dense_activation)(tf.cast(h,tf.float32))
@@ -69,10 +66,13 @@ def create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv
         else:
             h = Cropping2D(((cropping//2,cropping//2+1),(cropping//2,cropping//2+1)))(h)
 
-    # Generate the model
-    model = Model(input_layer,h)
-    encoder = Model(input_layer,h_2)
-    decoder = Model(h_3,h)
+    # Build the encoder only
+    net = Model(input_layer,h)
 
-    return model, encoder, decoder
+    # Set the decoder as non-trainable
+    for i in range (len(net.layers)-22):
+        net.layers[22+i].trainable = False
+
+    return net
+
 

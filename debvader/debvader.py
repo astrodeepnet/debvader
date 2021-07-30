@@ -8,19 +8,18 @@ import debvader
 from debvader import model
 
 
-def load_deblender(survey, input_shape, hidden_dim, latent_dim, filters, kernels):
+def load_deblender(survey, input_shape, latent_dim, filters, kernels):
     """
     load weights trained for a particular dataset
     parameters:
         survey: string calling the particular dataset (choices are: "dc2")
         input_shape: shape of input tensor
-        hidden_dim: size of the two dense layers before and after the latent space
         latent_dim: size of the latent space
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
     """
     # Create the model
-    net, encoder, decoder = model.create_model_vae(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None)
+    net = model.create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None)
 
     # Define the loss function
     def vae_loss(x, x_decoded_mean):

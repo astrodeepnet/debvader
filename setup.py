@@ -7,8 +7,8 @@ requirements = ["numpy==1.17.4","tensorflow==2.1.0","tensorflow-probability==0.9
 
 setup(
     name="debvader",
-    version="0.0.10125",
-    author="Bastien Arcelin, Cyrille Doux, Biswajit Biswas",
+    version="0.0.7",
+    author="Bastien Arcelin, Cyrille Doux, Thomas Sainrat, Biswajit Biswas, Alexandre Boucaud",
     author_email="arcelin@apc.in2p3.fr",
     description="Galaxy deblender from variational autoencoders",
     long_description=readme,
