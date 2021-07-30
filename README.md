@@ -17,7 +17,7 @@ It requires few packages to work:
 
 It can then be pip installed with
 ``` 
-pip install debvader 
+pip install --index-url https://test.pypi.org/simple/ debvader 
 ```
 
 ## Authors
@@ -28,3 +28,5 @@ Cyrille Doux
 Thomas Sainrat
 
 Biswajit Biswas
+
+Alexandre Boucaud
