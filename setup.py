@@ -3,7 +3,13 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-requirements = ["numpy==1.17.4","tensorflow==2.1.0","tensorflow-probability==0.9.0","matplotlib", "jupyter"]
+requirements = [
+    "numpy==1.17.4",
+    "tensorflow==2.1.0",
+    "tensorflow-probability==0.9.0",
+    "matplotlib",
+    "jupyter",
+]
 
 setup(
     name="debvader",
