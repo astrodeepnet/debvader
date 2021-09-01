@@ -14,7 +14,7 @@ This repo contains the scripts to use the deblending algorithm based on variatio
 
 ## Example
 
-An example of application of `debvader` on DC2 images is presented in [this tutorial](tutorials/deblending_dc2_images.ipynb).
+An example of application of `debvader` on DC2 images is presented in [this tutorial](notebooks/deblending_dc2_images.ipynb).
 
 ## Installation
 

@@ -1,40 +1,8 @@
-import os
-import sys
-
-import matplotlib.pyplot as plt
-import numpy as np
-import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow.keras import metrics
-from tensorflow.keras.callbacks import (
-    Callback,
-    ModelCheckpoint,
-    ReduceLROnPlateau,
-    TerminateOnNaN,
-)
-from tensorflow.keras.layers import (
-    BatchNormalization,
-    Concatenate,
-    Conv2D,
-    Conv2DTranspose,
-    Cropping2D,
-    Dense,
-    Dropout,
-    Flatten,
-    Input,
-    Lambda,
-    MaxPool2D,
-    PReLU,
-    Reshape,
-    UpSampling2D,
-)
-from tensorflow.keras.models import Model
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.utils import plot_model
+from tensorflow.keras.callbacks import Callback
 
 ###### Callbacks
 # Create a callback for changing KL coefficient in the loss
-
 
 class changeAlpha(Callback):
     def __init__(self, alpha, network, loss, metric):
