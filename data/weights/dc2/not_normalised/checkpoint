@@ -1,0 +1,2 @@
+model_checkpoint_path: "cp-{epoch:04d}.ckpt"
+all_model_checkpoint_paths: "cp-{epoch:04d}.ckpt"
