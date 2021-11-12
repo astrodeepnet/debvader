@@ -26,7 +26,7 @@ def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_enc
         kernels: kernels used for the convolutional layers
     """
     # Create the model
-    net, encoder, decoder = model.create_model_vae_2(
+    net, encoder, decoder = model.create_model_vae(
         input_shape,
         latent_dim,
         filters,
