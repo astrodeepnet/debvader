@@ -1,9 +1,18 @@
 import os
 
 import tensorflow as tf
+import tensorflow.keras.backend as K
 
+#import debvader
+#from debvader import model
 
-def train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose):
+###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
+import sys
+sys.path.insert(0,'.')
+import model
+######
+
+def train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose=1):
     """
     train a network on data for a fixed number of epochs
     parameters:
@@ -16,6 +25,7 @@ def train_network(net, epochs, training_data, validation_data, batch_size, callb
         verbose: display of training (1:yes, 2: no)
     """
 
+    print('\nStart the training')
     hist = net.fit(training_data[0], training_data[1], epochs=epochs,
                     batch_size=batch_size,
                     verbose=verbose,
@@ -26,10 +36,29 @@ def train_network(net, epochs, training_data, validation_data, batch_size, callb
 
     return hist
 
-def train_deblender(survey_name, epochs, training_data, validation_data, batch_size, callbacks, verbose):
+
+def define_callbacks(vae_or_deblender, survey_name):
+    """
+    Define callbacks for a network to train
+    parameters:
+        vae_or_deblender: give strings for 
+    """
+    saving_path = '../data/weights/'+str(survey_name)+'/'+str(vae_or_deblender)+'/'
+    checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'mse/weights_noisy_v4.ckpt', monitor='mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq=1)
+    checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'loss/weights_noisy_v4.ckpt', monitor='loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq=1)
+    checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_mse/weights_noisy_v4.ckpt', monitor='val_mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
+    checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_loss/weights_noisy_v4.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
+
+    callbacks = [checkpointer_mse, checkpointer_loss, checkpointer_val_mse, checkpointer_val_loss]
+
+    return callbacks
+
+
+def train_deblender(survey_name, from_survey, epochs, training_data, validation_data, nb_of_bands = 6, batch_size = 5, verbose = 2):
     """
     function to train a network for a new survey
     survey_name: name of the survey
+    from_survey: 
     epochs: number of epochs of training
     training_data: training data under the format of numpy arrays (inputs, labels)
     validation_data: validation data under the format of numpy arrays (inputs, labels)
@@ -39,7 +68,13 @@ def train_deblender(survey_name, epochs, training_data, validation_data, batch_s
    
     """
     # Generate a network for training. The architecture is fixed.
-    net, encoder, decoder = create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None)
+    input_shape = (59, 59, nb_of_bands)
+    latent_dim = 32
+    filters = [32,64,128,256]
+    kernels = [3,3,3,3]
+
+    net, encoder, decoder = model.create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None)
+    print("VAE model")
     net.summary()
 
     # Define the loss as the log likelihood of the distribution on the image pixels
@@ -57,25 +92,57 @@ def train_deblender(survey_name, epochs, training_data, validation_data, batch_s
                 experimental_run_tf_function=False,
                 )
 
-    if transfer_learning:
+    if from_survey!=None:
         # Start from the weights of an already trained network (recommended)
-        path_output = '../data/weigths/dc2/not_normalised/'
+        path_output = '../data/weights/'+str(from_survey)+'/not_normalised/'
         latest = tf.train.latest_checkpoint(path_output)
         net.load_weights(latest)
 
-    # Callbacks
-    saving_path = '../data/weigths/'+str(survey_name)+'/'
-    checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_output+'val_mse/weights_noisy_v4.{epoch:02d}-{val_mse:.2f}.ckpt', monitor='val_mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-    checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_output+'val_loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-    checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_output+'mse/weights_noisy_v4.{epoch:02d}-{mse:.2f}.ckpt', monitor='mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-    checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_output+'loss/weights_noisy_v4.{epoch:02d}-{loss:.2f}.ckpt', monitor='loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-
-    callbacks = [checkpointer_mse, checkpointer_loss, checkpointer_val_mse, checkpointer_val_loss]
+    # Define callbacks for VAE
+    callbacks = define_callbacks("vae",survey_name)
 
     # Do the training for the VAE
-    hist = training(net, epochs, training_data, validation_data, batch_size, callbacks, verbose)
+    hist_vae = train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose)
+    print("\nTraining of VAE done.")
 
-    return hist, net
+    # Set the decoder as non-trainable
+    decoder.trainable = False
+
+    # Compilation of the deblender
+    net.compile(optimizer=tf.optimizers.Adam(learning_rate=1e-4), 
+                loss=vae_loss,
+                metrics = ['mse', kl_metric],
+                experimental_run_tf_function=False,
+                )
+    print("\n\nDeblender model")
+    net.summary()
+
+    # Define callbacks for deblender
+    callbacks = define_callbacks("deblender",survey_name)
+
+    # Do the training for the deblender
+    hist_deblender = train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose)
+    print("\nTraining of Deblender done.")
+
+    return hist_vae, hist_deblender, net
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def train_network_custom(net, loss, epochs, training_data, validation_data, batch_size, callbacks, verbose):

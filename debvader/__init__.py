@@ -1,3 +1,3 @@
 import debvader
 
-from . import model
+from . import model, train
