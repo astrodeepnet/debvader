@@ -54,7 +54,7 @@ def define_callbacks(vae_or_deblender, survey_name):
     return callbacks
 
 
-def train_deblender(survey_name, from_survey, epochs, training_data, validation_data, nb_of_bands = 6, batch_size = 5, verbose = 2):
+def train_deblender(survey_name, from_survey, epochs, training_data_vae, validation_data_vae, training_data_deblender, validation_data_deblender, nb_of_bands = 6, channel_last = True, batch_size = 5, verbose = 2):
     """
     function to train a network for a new survey
     survey_name: name of the survey
@@ -92,8 +92,16 @@ def train_deblender(survey_name, from_survey, epochs, training_data, validation_
                 experimental_run_tf_function=False,
                 )
 
+    # Check if data format is correct
+    if (channel_last==False) & (training_data_vae.shape[2]!=nb_of_bands):
+        print('The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again.')
+        raise ValueError
+    if channel_last & (training_data_vae.shape[-1]!=nb_of_bands):
+        print('The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again.')
+        raise ValueError
+
+    # Start from the weights of an already trained network (recommended if possible)
     if from_survey!=None:
-        # Start from the weights of an already trained network (recommended)
         path_output = '../data/weights/'+str(from_survey)+'/not_normalised/'
         latest = tf.train.latest_checkpoint(path_output)
         net.load_weights(latest)
@@ -102,7 +110,7 @@ def train_deblender(survey_name, from_survey, epochs, training_data, validation_
     callbacks = define_callbacks("vae",survey_name)
 
     # Do the training for the VAE
-    hist_vae = train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose)
+    hist_vae = train_network(net, epochs, training_data_vae, validation_data_vae, batch_size, callbacks, verbose)
     print("\nTraining of VAE done.")
 
     # Set the decoder as non-trainable
@@ -121,7 +129,7 @@ def train_deblender(survey_name, from_survey, epochs, training_data, validation_
     callbacks = define_callbacks("deblender",survey_name)
 
     # Do the training for the deblender
-    hist_deblender = train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose)
+    hist_deblender = train_network(net, epochs, training_data_deblender, validation_data_deblender, batch_size, callbacks, verbose)
     print("\nTraining of Deblender done.")
 
     return hist_vae, hist_deblender, net

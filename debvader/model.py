@@ -105,7 +105,8 @@ def create_decoder(
             )(h)
 
     # Build the encoder only
-    h = tfp.layers.DistributionLambda(make_distribution_fn=lambda t: tfd.Normal(loc=t[...,:6], scale=1e-4 +t[...,6:])
+    print(input_shape[-1])
+    h = tfp.layers.DistributionLambda(make_distribution_fn=lambda t: tfd.Normal(loc=t[...,:input_shape[-1]], scale=1e-4 +t[...,input_shape[-1]:])
                                           ,convert_to_tensor_fn=tfp.distributions.Distribution.sample)(h)
     
     
