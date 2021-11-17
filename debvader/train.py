@@ -41,15 +41,14 @@ def define_callbacks(vae_or_deblender, survey_name):
     """
     Define callbacks for a network to train
     parameters:
-        vae_or_deblender: give strings for 
+        vae_or_deblender: training a VAE or a deblender. Used for the saving path.
+        survey_name: name of the survey from which the data comes. Used for the saving path.
     """
     saving_path = '../data/weights/'+str(survey_name)+'/'+str(vae_or_deblender)+'/'
-    checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'mse/weights_noisy_v4.ckpt', monitor='mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq=1)
-    checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'loss/weights_noisy_v4.ckpt', monitor='loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq=1)
     checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_mse/weights_noisy_v4.ckpt', monitor='val_mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
     checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_loss/weights_noisy_v4.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
 
-    callbacks = [checkpointer_mse, checkpointer_loss, checkpointer_val_mse, checkpointer_val_loss]
+    callbacks = [checkpointer_val_mse, checkpointer_val_loss]
 
     return callbacks
 
@@ -58,14 +57,13 @@ def train_deblender(survey_name, from_survey, epochs, training_data_vae, validat
     """
     function to train a network for a new survey
     survey_name: name of the survey
-    from_survey: 
+    from_survey: name of the survey used for transfer learning. The weights saved for this survey will be loaded as initialisation of the network.
     epochs: number of epochs of training
-    training_data: training data under the format of numpy arrays (inputs, labels)
-    validation_data: validation data under the format of numpy arrays (inputs, labels)
+    training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
+    validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
     batch_size: size of batch for training
     callbacks: callbacks wanted for the training
     verbose: display of training (1:yes, 2: no)
-   
     """
     # Generate a network for training. The architecture is fixed.
     input_shape = (59, 59, nb_of_bands)
