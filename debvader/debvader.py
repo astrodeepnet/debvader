@@ -68,7 +68,7 @@ def deblend(net, images):
     """
     Deblend the image using the network
     parameters:
-        net: network to test
+        net: neural network used to do the deblending
         images: array of images. It can contain only one image.
     """
     # Normalize the images
@@ -78,3 +78,64 @@ def deblend(net, images):
     #images_deblended = np.sinh(np.arctanh(net.predict(images_normed)))
 
     return net(tf.cast(images, tf.float32)).mean().numpy(), net(tf.cast(images, tf.float32))
+
+
+def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = 59, nb_of_bands = 6):
+    """
+    Deblend a field of galaxies
+    parameters:
+        net: network used to deblend the field
+        field_image: image of the field to deblend
+        galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
+        cutout_images: stamps centered on the galaxies to deblend
+        cutout_size: size of the stamps
+    """
+    field_size = field_image.shape[1]
+
+    # Deblend the cutouts around the detected galaxies. If needed, create the cutouts.
+    if cutout_images!= None:
+        output_images_mean, output_images_distribution = deblend(net, cutout_images)
+    else:
+        cutout_images = extract_cutouts(field_image, field_size, galaxy_distances_to_center, cutout_size,nb_of_bands)        
+        output_images_mean, output_images_distribution = deblend(net, cutout_images)
+    
+    # First create padded images of the stamps at the size of the field to allow for a simple subtraction.
+    output_images_mean_padded = np.zeros((len(cutout_images),field_size,field_size,nb_of_bands))
+    output_images_mean_padded[:,int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),
+                          int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),:]=output_images_mean
+
+    # Initialise a denoised field that will be composed of the deblended galaxies
+    denoised_field = np.zeros((field_size,field_size,nb_of_bands))        
+
+    # Save an image of the field
+    field_img_save = field_image.copy()
+    
+    # Subtract each deblended galaxy to the field and add it to the denoised field.
+    for i in range(len(output_images_mean)):
+        field_image[0] -= np.roll(output_images_mean_padded[i], (galaxy_distances_to_center[i][0],galaxy_distances_to_center[i][1]), axis = (0,1))
+        denoised_field +=np.roll(output_images_mean_padded[i], (galaxy_distances_to_center[i][0],galaxy_distances_to_center[i][1]), axis = (0,1))   
+
+    return field_img_save, field_image, denoised_field, cutout_images, output_images_mean
+
+
+
+def extract_cutouts(field_image, field_size, galaxy_distances_to_center,cutout_size=59, nb_of_bands = 6):
+    """
+    Extract the cutouts around particular galaxies in the field
+    parameters:
+        field_image: image of the field to deblend
+        field_size: size of the field
+        galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
+        cutout_size: size of the stamps
+    """
+    cutout_images = np.zeros((len(galaxy_distances_to_center),cutout_size, cutout_size, nb_of_bands))
+    for i in range(len(galaxy_distances_to_center)):
+        try:
+            x_shift = galaxy_distances_to_center[i][0]
+            y_shift = galaxy_distances_to_center[i][1]
+            cutout_images[i]=field_image[0,-int(cutout_size/2)+x_shift+int(field_size/2):int(cutout_size/2)+x_shift+int(field_size/2)+1,
+                                    -int(cutout_size/2)+y_shift+int(field_size/2):int(cutout_size/2)+y_shift+int(field_size/2)+1]
+        except:
+            print("Galaxy "+str(i)+" is too close from the border of the field to be considered here.")
+
+    return cutout_images
