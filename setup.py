@@ -13,15 +13,15 @@ requirements = [
 
 setup(
     name="debvader",
-    version="0.0.7",
+    version="0.0.81191",
     author="Bastien Arcelin, Cyrille Doux, Thomas Sainrat, Biswajit Biswas, Alexandre Boucaud",
     author_email="arcelin@apc.in2p3.fr",
     description="Galaxy deblender from variational autoencoders",
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/BastienArcelin/debvader",
-    packages=find_packages(),
     include_package_data=True,
+    packages=['data','debvader'],
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3.6",

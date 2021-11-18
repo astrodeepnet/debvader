@@ -3,13 +3,13 @@ import os
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
-#import debvader
-#from debvader import model
+import debvader
+from debvader import model
 
 ###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
-import sys
-sys.path.insert(0,'.')
-import model
+#import sys
+#sys.path.insert(0,'.')
+#import model
 ######
 
 def train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose=1):

@@ -5,14 +5,14 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 
 path_folder = os.path.dirname(os.path.abspath(__file__))
-print(path_folder)
-#import debvader
-#from debvader import model
+
+import debvader
+from debvader import model
 
 ###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
-import sys
-sys.path.insert(0,'.')
-import model
+#import sys
+#sys.path.insert(0,'.')
+#import model
 ######
 
 def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder = False):
@@ -53,7 +53,9 @@ def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_enc
     )
 
     # Load the weights corresponding to the chosen survey
+    print(path_folder)
     loading_path = str(path_folder) + "/../data/weights/" + survey + "/not_normalised/"
+    print(loading_path)
     latest = tf.train.latest_checkpoint(loading_path)
     net.load_weights(latest)
 
