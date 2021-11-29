@@ -103,21 +103,37 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
         list_idx = list(range(1, len(output_images_mean)))
     else:
         cutout_images, list_idx = extract_cutouts(field_image, field_size, galaxy_distances_to_center, cutout_size,nb_of_bands)        
-        output_images_mean, output_images_distribution = deblend(net, cutout_images[list_idx])
- 
+        output_images_mean, output_images_distribution = deblend(net, cutout_images[list_idx])  
+
+    # Compute epistemic uncertainty (from the decoder of the deblender)
+    cutout_array_for_epistemic = []
+    idx_cutout = []
+    epistemic_uncertainty = []
+    for i in range (100):
+        cutout_array_for_epistemic.append(deblend(net, cutout_images[list_idx])[1].mean().numpy())
+        idx_cutout.append(i*len(list_idx))
+    for j in range (len(list_idx)):
+        epistemic_uncertainty.append(np.mean(np.concatenate(cutout_array_for_epistemic)[np.array(idx_cutout)+j], axis = 0))
+
     # First create padded images of the stamps at the size of the field to allow for a simple subtraction.
     output_images_mean_padded = np.zeros((len(output_images_mean),field_size,field_size,nb_of_bands))
     output_images_mean_padded[:,int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),
                           int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),:]=output_images_mean
 
-    # Create the corresponding standard deviation image.
+    # Create the corresponding standard deviation image (aleatoric uncertainty).
     output_images_stddev_padded = np.zeros((len(output_images_mean),field_size,field_size,nb_of_bands))
     output_images_stddev_padded[:,int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),
                           int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),:]=output_images_distribution.stddev().numpy()
 
+    # Create the corresponding epistemic uncertainty image (aleatoric uncertainty).
+    output_images_epistemic_padded = np.zeros((len(output_images_mean),field_size,field_size,nb_of_bands))
+    output_images_epistemic_padded[:,int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),
+                          int((field_size-cutout_size)/2):cutout_size+int((field_size-cutout_size)/2),:]=epistemic_uncertainty
+
     # Initialise a denoised field that will be composed of the deblended galaxies
     denoised_field = np.zeros((field_size,field_size,nb_of_bands))        
-    denoised_field_std = np.zeros((field_size,field_size,nb_of_bands))        
+    denoised_field_std = np.zeros((field_size,field_size,nb_of_bands))   
+    denoised_field_epistemic = np.zeros((field_size,field_size,nb_of_bands))        
 
     # Save an image of the field
     field_img_save = field_image.copy()
@@ -134,6 +150,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
             shifts[i]=opt.x
             for j in range (nb_of_bands):
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
+                denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
                 #if (np.max(output_images_stddev_padded[i,:,:,j])>0.5): # avoid to add galaxies generated with too high uncertainty
                 #    break
                 field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
