@@ -95,6 +95,8 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
         galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
         cutout_images: stamps centered on the galaxies to deblend
         cutout_size: size of the stamps
+        nb_of_bands: number of filters in the image
+        optimise_position: boolean to indicate if the user wants to use the scipy optimize package to optimise the position of the galaxy
         normalised: boolean to indicate if images need to be normalised
     """
     field_size = field_image.shape[1]
@@ -169,7 +171,18 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
 
 
 def iterative_deblending(net, field_image, galaxy_distances_to_center_in, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, normalised = False):
-    
+    '''
+    Do the iterative deblending of a scene
+    paramters:
+        net: network used to deblend the field
+        field_image: image of the field to deblend
+        galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
+        cutout_images: stamps centered on the galaxies to deblend
+        cutout_size: size of the stamps
+        nb_of_bands: number of filters in the image
+        optimise_position: boolean to indicate if the user wants to use the scipy optimize package to optimise the position of the galaxy
+        normalised: boolean to indicate if images need to be normalised
+   '''
     if isinstance(galaxy_distances_to_center_in, np.ndarray):
         galaxy_distances_to_center = galaxy_distances_to_center_in
     else:    
@@ -207,6 +220,9 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, cutout
 
 
 def detect_objects(field_image):
+    '''
+    Detect the objects in the field_image image using the photutils detection algorithm.
+    '''
     df_temp = photutils.find_peaks(field_image[0,:,:,2], threshold=np.sqrt(0.01), npeaks=30, centroid_func=photutils.centroids.centroid_com)
     galaxy_distances_to_center = []
 
@@ -217,7 +233,20 @@ def detect_objects(field_image):
 
 
 def deblending_step(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, normalised = False):
-    field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx = deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, normalised=normalised)
+    '''
+    One step of the iterative procedure
+    paramters:
+        net: network used to deblend the field
+        field_image: image of the field to deblend
+        galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
+        cutout_images: stamps centered on the galaxies to deblend
+        cutout_size: size of the stamps
+        nb_of_bands: number of filters in the image
+        optimise_position: boolean to indicate if the user wants to use the scipy optimize package to optimise the position of the galaxy
+        normalised: boolean to indicate if images need to be normalised
+    '''
+    
+    field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx = deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, normalised=normalisedd)
     print("Deblend "+str(len(shifts))+' more galaxy(ies)')
     for z,i in enumerate (list_idx):
         galaxy_distances_to_center[i][0] = galaxy_distances_to_center[i][0]+np.round(shifts[z][0])
