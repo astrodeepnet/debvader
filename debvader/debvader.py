@@ -170,7 +170,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
 
 
 
-def iterative_deblending(net, field_image, galaxy_distances_to_center_in, threshold=0.01, npeaks=10, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, normalised=False):
+def iterative_deblending(net, field_image, galaxy_distances_to_center_in, threshold=0.01, npeaks_per_iteration=10, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, normalised=False):
     '''
     Do the iterative deblending of a scene
     paramters:
@@ -186,7 +186,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, thresh
     if isinstance(galaxy_distances_to_center_in, np.ndarray):
         galaxy_distances_to_center = galaxy_distances_to_center_in
     else:    
-        galaxy_distances_to_center = detect_objects(field_image, threshold=threshold, npeaks=npeaks)
+        galaxy_distances_to_center = detect_objects(field_image, threshold=threshold, npeaks_per_iteration=npeaks_per_iteration)
     field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, normalised=normalised)
 
     field_img_init = field_img_save.copy()
@@ -202,7 +202,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, thresh
         print("iteration "+str(k))
         mse_step_previous=mse_step
         shifts_previous = shifts
-        field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, detect_objects(field_image, threshold=threshold, npeaks=npeaks), cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, normalised=normalised)
+        field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, detect_objects(field_image, threshold=threshold, npeaks_per_iteration=npeaks_per_iteration), cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, normalised=normalised)
         denoised_field_total += denoised_field
         denoised_field_std_total += denoised_field_std
         denoised_field_epistemic_total += denoised_field_epistemic
@@ -218,11 +218,11 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, thresh
     return field_img_init, field_image, denoised_field_total, denoised_field_std_total, denoised_field_epistemic_total, cutout_images, output_images_mean
 
 
-def detect_objects(field_image, threshold = 0.01, npeaks = 10):
+def detect_objects(field_image, threshold = 0.01, npeaks_per_iteration = 10):
     '''
     Detect the objects in the field_image image using the photutils detection algorithm.
     '''
-    df_temp = photutils.find_peaks(field_image[0,:,:,2], threshold=threshold, npeaks=npeaks, centroid_func=photutils.centroids.centroid_com)
+    df_temp = photutils.find_peaks(field_image[0,:,:,2], threshold=threshold, npeaks_per_iteration=npeaks_per_iteration, centroid_func=photutils.centroids.centroid_com)
     galaxy_distances_to_center = []
 
     for i in range (len(df_temp['y_peak'])):
