@@ -208,7 +208,9 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
         print("iteration "+str(k))
         mse_step_previous=mse_step
         shifts_previous = shifts
-        field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration), cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+        detection_k = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration)
+        detection_k = detection_k[np.where(detection_k!=galaxy_distances_to_center)]
+        field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, detection_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
         denoised_field_total += denoised_field
         denoised_field_std_total += denoised_field_std
         denoised_field_epistemic_total += denoised_field_epistemic
