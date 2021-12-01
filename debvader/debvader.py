@@ -200,6 +200,8 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
     denoised_field_total = denoised_field
     denoised_field_std_total = denoised_field_std
     denoised_field_epistemic_total = denoised_field_epistemic
+    cutout_images_total = cutout_images
+    output_images_total = output_images_mean
 
     while (len(shifts)>len(shifts_previous)) and (diff_mse<0):
 
@@ -211,6 +213,8 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
         denoised_field_std_total += denoised_field_std
         denoised_field_epistemic_total += denoised_field_epistemic
         shifts = np.concatenate((shifts_previous, shifts), axis = 0)
+        cutout_images_total = np.concatenate((cutout_images_total, cutout_images), axis = 0)
+        output_images_total = np.concatenate((output_images_total, output_images_mean), axis = 0)
         diff_mse = mse_step-mse_step_previous
         k+=1
 
@@ -219,7 +223,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
 
     print('converged !')
  
-    return field_img_init, field_image, denoised_field_total, denoised_field_std_total, denoised_field_epistemic_total, cutout_images, output_images_mean
+    return field_img_init, field_image, denoised_field_total, denoised_field_std_total, denoised_field_epistemic_total, cutout_images_total, output_images_total
 
 
 def detect_objects(field_image, npeaks_per_iteration = 10):
