@@ -14,7 +14,7 @@ requirements = [
 
 setup(
     name="debvader",
-    version="0.0.812",
+    version="0.0.8121",
     author="Bastien Arcelin, Cyrille Doux, Thomas Sainrat, Biswajit Biswas, Alexandre Boucaud",
     author_email="arcelin@apc.in2p3.fr",
     description="Galaxy deblender from variational autoencoders",
