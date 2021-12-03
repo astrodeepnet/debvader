@@ -6,18 +6,12 @@ import tensorflow.keras.backend as K
 import scipy
 from scipy import optimize
 import skimage
-import photutils
 
 path_folder = os.path.dirname(os.path.abspath(__file__))
 
-#import debvader
-#from debvader import model
+import debvader
+from debvader import model
 
-###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
-import sys
-sys.path.insert(0,'.')
-import model
-######
 
 def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder = False):
     """
@@ -126,7 +120,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
     field_img_save = field_image.copy()
 
     def fun (x, img, net_output): 
-        return skimage.measure.compare_mse(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))#1/skimage.measure.compare_ssim(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))
+        return skimage.measure.compare_mse(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))
 
     # Subtract each deblended galaxy to the field and add it to the denoised field.
     shifts=np.zeros((len(output_images_mean),2))
