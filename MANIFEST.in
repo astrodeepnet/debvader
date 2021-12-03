@@ -1,7 +1,7 @@
-include data/weights/dc2/not_normalised/loss/checkpoint
-include data/weights/dc2/not_normalised/loss/weights_noisy_v4.386--6.61.ckpt.data-00000-of-00002
-include data/weights/dc2/not_normalised/loss/weights_noisy_v4.386--6.61.ckpt.data-00001-of-00002
-include data/weights/dc2/not_normalised/loss/weights_noisy_v4.386--6.61.ckpt.index
+include data/weights/dc2/deblender/val_loss/checkpoint
+include data/weights/dc2/deblender/val_loss/weights_noisy_v4.386--6.61.ckpt.data-00000-of-00002
+include data/weights/dc2/deblender/val_loss/weights_noisy_v4.386--6.61.ckpt.data-00001-of-00002
+include data/weights/dc2/deblender/val_loss/weights_noisy_v4.386--6.61.ckpt.index
 include data/dc2_imgs/imgs_dc2.npy
 include data/dc2_imgs/field/field_img.npy
 include data/dc2_imgs/field/galaxies_from_field.npy

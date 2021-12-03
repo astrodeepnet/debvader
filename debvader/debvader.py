@@ -48,7 +48,7 @@ def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_enc
     )
 
     # Load the weights corresponding to the chosen survey
-    loading_path = str(path_folder) + "/../data/weights/" + survey + "/not_normalised/loss/"
+    loading_path = str(path_folder) + "/../data/weights/" + survey + "/deblender/val_loss/"
     latest = tf.train.latest_checkpoint(loading_path)
     net.load_weights(latest)
 
