@@ -19,12 +19,18 @@ An example of application of `debvader` on DC2 images is presented in [this tuto
 ## Installation
 
 It requires few packages to work:
+- `scikit-image`>=0.17
 - `tensorflow` == 2.1.0
 - `tensorflow-probability` == 0.9.0
+- `scipy`
 - `numpy`
 - `matplotlib`
-- `pandas`
 - `jupyter`
+
+They can be installed with
+```
+pip install -r requirements.txt
+```
 
 It can then be pip installed with
 ``` 
