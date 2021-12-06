@@ -100,7 +100,7 @@ def train_deblender(survey_name, from_survey, epochs, training_data_vae, validat
 
     # Start from the weights of an already trained network (recommended if possible)
     if from_survey!=None:
-        path_output = '../data/weights/'+str(from_survey)+'/not_normalised/'
+        path_output = '../data/weights/'+str(from_survey)+'/deblender/val_loss/'
         latest = tf.train.latest_checkpoint(path_output)
         net.load_weights(latest)
 
