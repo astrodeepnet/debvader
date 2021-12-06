@@ -32,7 +32,7 @@ They can be installed with
 pip install -r requirements.txt
 ```
 
-It can then be pip installed with
+Debvader can then be pip installed with
 ``` 
 pip install --index-url https://test.pypi.org/simple/ debvader 
 ```
