@@ -4,17 +4,18 @@ with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    "numpy==1.17.4",
+    "numpy>=1.17.4",
     "tensorflow==2.1.0",
     "tensorflow-probability==0.9.0",
     "matplotlib",
     "jupyter",
-    "scikit-image"
+    "scipy",
+    "scikit-image>=0.17.2"
 ]
 
 setup(
     name="debvader",
-    version="0.0.1001",
+    version="0.0.100102",
     author="Bastien Arcelin, Cyrille Doux, Thomas Sainrat, Biswajit Biswas, Alexandre Boucaud",
     author_email="arcelin@apc.in2p3.fr",
     description="Galaxy deblender from variational autoencoders",
