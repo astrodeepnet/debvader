@@ -1,7 +1,6 @@
-numpy>=1.17.4
-tensorflow==2.1.0
+scikit-image>=0.17
 tensorflow-probability==0.9.0
+tensorflow==2.1.0
 matplotlib
 jupyter
-scipy
-scikit-image>=0.17.2
+
