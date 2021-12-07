@@ -31,7 +31,7 @@ def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_enc
         kernels: kernels used for the convolutional layers
     """
     # Create the model
-    net, encoder, decoder = model.create_model_vae(
+    net, encoder, decoder, z = model.create_model_vae(
         input_shape,
         latent_dim,
         filters,
@@ -166,7 +166,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
             for j in range (nb_of_bands):
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
                 if epistemic_uncertainty_estimation:
-                    denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
+                   denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
                 if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (skimage.measure.compare_mse(cutout_images[k],output_images_mean[i])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
                     pass
                 else:
@@ -207,11 +207,12 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
     cutout_images_total = cutout_images
     output_images_total = output_images_mean
     galaxy_distances_to_center_total = galaxy_distances_to_center
+    detection_k=np.zeros((1))
 
-    while (len(shifts)>len(shifts_previous)) or (npeaks_per_iteration<60):#and (diff_mse<0)
+    while len(detection_k)!=0:#(len(shifts)>len(shifts_previous)):
 
         print("iteration "+str(k))
-        print(npeaks_per_iteration)
+        #print(npeaks_per_iteration)
         mse_step_previous=mse_step
         shifts_previous = shifts
         detection_k = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration)
@@ -221,11 +222,13 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
             if detection_k[i] in galaxy_distances_to_center_total:
                 idx_to_remove.append(i)
         detection_k = np.delete(detection_k, idx_to_remove, axis = 0)
+        detection_up_to_k = np.concatenate((detection_k,galaxy_distances_to_center_total),axis=0)
+        #print(detection_k , detection_up_to_k)
         field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, detection_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
-        if len(shifts)==0:
-            print('par ici') # If no galaxy is found here, except the ones that are too close from the borders, try to locate more galaxies.
-            npeaks_per_iteration+=10
-        
+
+        #field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_img_init, detection_up_to_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+        #field_img_init=field_img_save.copy()
+
         denoised_field_total += denoised_field
         denoised_field_std_total += denoised_field_std
         denoised_field_epistemic_total += denoised_field_epistemic
@@ -235,11 +238,23 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
         galaxy_distances_to_center_total = np.concatenate((galaxy_distances_to_center_total, galaxy_distances_to_center), axis = 0)
         diff_mse = mse_step-mse_step_previous
         k+=1
+        if diff_mse==0.:
+            # If no galaxy is found here, except the ones that are too close from the borders, try to locate more galaxies.
+            npeaks_per_iteration+=10
+            detection_k = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration)
+            # Avoid to have several detection at the same location
+            idx_to_remove = []
+            for i in range (len(detection_k)):
+                if detection_k[i] in galaxy_distances_to_center_total:
+                    idx_to_remove.append(i)
+            detection_k = np.delete(detection_k, idx_to_remove, axis = 0)
+            if npeaks_per_iteration==50:
+                print('converged on maximum peak per iteration.')
+                break
 
         print(str(len(shifts))+' galaxies found up to this step.')
         print('deta_mse = '+str(diff_mse)+', mse_iteration = '+str(mse_step)+' and mse_previous_step = '+str(mse_step_previous))
-        #else:
-        #    diff_mse=1
+
     print('converged !')
  
     return field_img_init, field_image, denoised_field_total, denoised_field_std_total, denoised_field_epistemic_total, cutout_images_total, output_images_total

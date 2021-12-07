@@ -71,7 +71,7 @@ def train_deblender(survey_name, from_survey, epochs, training_data_vae, validat
     filters = [32,64,128,256]
     kernels = [3,3,3,3]
 
-    net, encoder, decoder = model.create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None)
+    net, encoder, decoder, z = model.create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None)
     print("VAE model")
     net.summary()
 
