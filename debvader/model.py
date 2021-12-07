@@ -161,4 +161,4 @@ def create_model_vae(
     
     net = Model(inputs = x_input, outputs = decoder(z))
     
-    return net, encoder, decoder, z
+    return net, encoder, decoder, Model(inputs = x_input, outputs = z)

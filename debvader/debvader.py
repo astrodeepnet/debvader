@@ -20,7 +20,7 @@ sys.path.insert(0,'.')
 import model
 ######
 
-def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder = False):
+def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder_z = False):
     """
     load weights trained for a particular dataset
     parameters:
@@ -64,8 +64,8 @@ def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_enc
     net.load_weights(latest)
 
 
-    if return_encoder_decoder:
-        return net, encoder, decoder
+    if return_encoder_decoder_z:
+        return net, encoder, decoder, z
     else:
         return net
 
