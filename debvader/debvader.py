@@ -7,6 +7,7 @@ import tensorflow.keras.backend as K
 import scipy
 from scipy import optimize
 import skimage
+from skimage import metrics
 import photutils
 
 path_folder = os.path.dirname(os.path.abspath(__file__))
@@ -144,7 +145,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
     field_img_save = field_image.copy()
 
     def fun (x, img, net_output): 
-        return skimage.measure.compare_mse(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))#1/skimage.measure.compare_ssim(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))
+        return metrics.mean_squared_error(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))#1/skimage.measure.compare_ssim(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))
 
     # Subtract each deblended galaxy to the field and add it to the denoised field.
     shifts=np.zeros((len(output_images_mean),2))
@@ -157,7 +158,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
                 if epistemic_uncertainty_estimation:
                     denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
-                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (skimage.measure.compare_mse(cutout_images[k],output_images_mean[i])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
+                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k],output_images_mean[i])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
                     pass
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
@@ -167,7 +168,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
                 if epistemic_uncertainty_estimation:
                    denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
-                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (skimage.measure.compare_mse(cutout_images[k],output_images_mean[i])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
+                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k],output_images_mean[i])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
                     pass
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
@@ -293,7 +294,7 @@ def deblending_step(net, field_image, galaxy_distances_to_center, cutout_images 
     for z,i in enumerate (list_idx):
         galaxy_distances_to_center[i][0] = galaxy_distances_to_center[i][0]+np.round(shifts[z][0])
         galaxy_distances_to_center[i][1] = galaxy_distances_to_center[i][1]+np.round(shifts[z][1])
-    mse_step = skimage.measure.compare_mse(field_img_save[0],denoised_field)
+    mse_step = metrics.mean_squared_error(field_img_save[0],denoised_field)
 
     return field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step
 
