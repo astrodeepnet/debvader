@@ -102,6 +102,9 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
         optimise_position: boolean to indicate if the user wants to use the scipy optimize package to optimise the position of the galaxy
         normalised: boolean to indicate if images need to be normalised
     """
+
+    field_image = field_image.copy()
+
     field_size = field_image.shape[1]
 
     # Deblend the cutouts around the detected galaxies. If needed, create the cutouts.
@@ -194,6 +197,9 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
         optimise_position: boolean to indicate if the user wants to use the scipy optimize package to optimise the position of the galaxy
         normalised: boolean to indicate if images need to be normalised
    '''
+
+    field_image = field_image.copy()
+    
     if isinstance(galaxy_distances_to_center_in, np.ndarray):
         galaxy_distances_to_center = galaxy_distances_to_center_in
     else:    
