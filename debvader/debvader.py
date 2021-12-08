@@ -6,7 +6,8 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 import scipy
 from scipy import optimize
-import skimage   
+
+import skimage
 from skimage import metrics
 import photutils
 
