@@ -6,6 +6,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 import scipy
 from scipy import optimize
+
 import skimage   
 from skimage import metrics
 import photutils
@@ -146,8 +147,8 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
     field_img_save = field_image.copy()
 
     def fun (x, img, net_output): 
-        return metrics.mean_squared_error(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))#skimage.measure.compare_mse(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))
 
+        return metrics.mean_squared_error(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))#skimage.measure.compare_mse(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))
 
     # Subtract each deblended galaxy to the field and add it to the denoised field.
     shifts=np.zeros((len(output_images_mean),2))
