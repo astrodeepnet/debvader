@@ -182,7 +182,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
 
 
 
-def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks_per_iteration=10, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, epistemic_uncertainty_estimation= False, epistemic_criterion=0., mse_criterion=0., normalised=False, use_sep=False):
+def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks_per_iteration=10, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, epistemic_uncertainty_estimation= False, epistemic_criterion=0., mse_criterion=0., normalised=False, use_sep=False, factor=3):
     '''
     Do the iterative deblending of a scene
     paramters:
@@ -201,7 +201,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
     if isinstance(galaxy_distances_to_center_in, np.ndarray):
         galaxy_distances_to_center = galaxy_distances_to_center_in
     else:    
-        galaxy_distances_to_center = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration, use_sep=use_sep)
+        galaxy_distances_to_center = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration, use_sep=use_sep, factor=factor)
     field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
 
     field_img_init = field_img_save.copy()
@@ -216,13 +216,13 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
     galaxy_distances_to_center_total = galaxy_distances_to_center
     detection_k=np.zeros((1))
 
-    while len(detection_k)!=0:#(len(shifts)>len(shifts_previous)):
+    while (len(shifts)>len(shifts_previous)):#len(detection_k)!=0:#
 
         print("iteration "+str(k))
         #print(npeaks_per_iteration)
         mse_step_previous=mse_step
         shifts_previous = shifts
-        detection_k = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration, use_sep=use_sep)
+        detection_k = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration, use_sep=use_sep, factor=factor)
         # Avoid to have several detection at the same location
         idx_to_remove = []
         for i in range (len(detection_k)):
@@ -230,7 +230,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
                 idx_to_remove.append(i)
         detection_k = np.delete(detection_k, idx_to_remove, axis = 0)
         detection_up_to_k = np.concatenate((detection_k,galaxy_distances_to_center_total),axis=0)
-        #print(detection_k , detection_up_to_k)
+
         field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_image, detection_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
 
         #field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_img_init, detection_up_to_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
@@ -248,14 +248,14 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
         if diff_mse==0.:
             # If no galaxy is found here, except the ones that are too close from the borders, try to locate more galaxies.
             npeaks_per_iteration+=10
-            detection_k = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration, use_sep=use_sep)
+            detection_k = detect_objects(field_image, npeaks_per_iteration=npeaks_per_iteration, use_sep=use_sep, factor=factor)
             # Avoid to have several detection at the same location
             idx_to_remove = []
             for i in range (len(detection_k)):
                 if detection_k[i] in galaxy_distances_to_center_total:
                     idx_to_remove.append(i)
             detection_k = np.delete(detection_k, idx_to_remove, axis = 0)
-            if npeaks_per_iteration==50:
+            if npeaks_per_iteration==500:
                 print('converged on maximum peak per iteration.')
                 break
 
@@ -273,6 +273,7 @@ def detect_objects(field_image, npeaks_per_iteration = 10, use_sep=False, factor
     test for dev branch
     '''
     field_image = field_image.copy()
+    field_size = field_image.shape[1]
     galaxy_distances_to_center = []
     if use_sep:
         print("using SExtractor for detection.")
@@ -283,7 +284,7 @@ def detect_objects(field_image, npeaks_per_iteration = 10, use_sep=False, factor
         objects = sep.extract(r_band_foreground, factor, err=bkg.globalrms)
 
         for i in range(min(npeaks_per_iteration, len(objects['y']))):
-            galaxy_distances_to_center.append((np.round(-129 + objects['y'][i]) , np.round(-129 + objects['x'][i])))
+            galaxy_distances_to_center.append((np.round(-int(field_size/2) + objects['y'][i]) , np.round(-int(field_size/2) + objects['x'][i])))
 
     else:
         print("using photutils for detection.")
@@ -291,7 +292,7 @@ def detect_objects(field_image, npeaks_per_iteration = 10, use_sep=False, factor
         
 
         for i in range (len(df_temp['y_peak'])):
-            galaxy_distances_to_center.append((np.round(-129+df_temp['y_peak'][i]),np.round(-129+df_temp['x_peak'][i])))
+            galaxy_distances_to_center.append((np.round(-int(field_size/2)+df_temp['y_peak'][i]),np.round(-int(field_size/2)+df_temp['x_peak'][i])))
             
     return np.array(galaxy_distances_to_center)
 
