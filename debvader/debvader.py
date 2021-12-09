@@ -13,9 +13,6 @@ import sep
 
 path_folder = os.path.dirname(os.path.abspath(__file__))
 
-#import debvader
-#from debvader import model
-
 ###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
 import sys
 sys.path.insert(0,'.')
@@ -269,27 +266,26 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center_in, npeaks
     return field_img_init, field_image, denoised_field_total, denoised_field_std_total, denoised_field_epistemic_total, cutout_images_total, output_images_total
 
 
-def detect_objects(field_image, npeaks_per_iteration = 10, use_sep=False, factor=1.5):
+def detect_objects(field_image, npeaks_per_iteration = 10, use_sep=False, factor=3):
     '''
     Detect the objects in the field_image image using the photutils detection algorithm.
     test for dev branch
     '''
-
+    field_image = field_image.copy()
     galaxy_distances_to_center = []
     if use_sep:
+        print("using SExtractor for detection.")
         r_band_data = field_image[0,:,:,2].copy()
         bkg = sep.Background(r_band_data)
 
         r_band_foreground = r_band_data - bkg
         objects = sep.extract(r_band_foreground, factor, err=bkg.globalrms)
 
-        print("objects detected are:")
-        print(objects)
-
         for i in range(min(npeaks_per_iteration, len(objects['y']))):
             galaxy_distances_to_center.append((np.round(-129 + objects['y'][i]) , np.round(-129 + objects['x'][i])))
 
     else:
+        print("using photutils for detection.")
         df_temp = photutils.find_peaks(field_image[0,:,:,2], threshold=0.1, npeaks=npeaks_per_iteration, centroid_func=photutils.centroids.centroid_com)
         
 
@@ -336,14 +332,22 @@ def extract_cutouts(field_image, field_size, galaxy_distances_to_center,cutout_s
     cutout_images = np.zeros((len(galaxy_distances_to_center),cutout_size, cutout_size, nb_of_bands))
     list_idx = []
     flag = False
+
     for i in range(len(galaxy_distances_to_center)):
         try:
             x_shift = galaxy_distances_to_center[i][0]
             y_shift = galaxy_distances_to_center[i][1]
-            cutout_images[i]=field_image[0,-int(cutout_size/2)+x_shift+int(field_size/2):int(cutout_size/2)+x_shift+int(field_size/2)+1,
-                                    -int(cutout_size/2)+y_shift+int(field_size/2):int(cutout_size/2)+y_shift+int(field_size/2)+1]
+
+            x_start = -int(cutout_size/2)+int(x_shift)+int(field_size/2)
+            x_end = int(cutout_size/2)+int(x_shift)+int(field_size/2)+1
+
+            y_start = -int(cutout_size/2)+int(y_shift)+int(field_size/2)
+            y_end = int(cutout_size/2)+int(y_shift)+int(field_size/2)+1
+
+            cutout_images[i]=field_image[0, x_start:x_end, y_start:y_end]
             list_idx.append(i)
-        except:
+
+        except ValueError:
             flag = True
 
     if flag:
