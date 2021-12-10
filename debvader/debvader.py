@@ -159,7 +159,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
                 if epistemic_uncertainty_estimation:
                     denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
-                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k],output_images_mean[i])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
+                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:],output_images_mean[i,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
                     pass
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
@@ -169,7 +169,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
                 if epistemic_uncertainty_estimation:
                    denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
-                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k],output_images_mean[i])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
+                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:],output_images_mean[i,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
                     pass
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
