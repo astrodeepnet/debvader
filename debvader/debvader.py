@@ -11,8 +11,12 @@ from scipy import optimize
 from skimage import metrics
 import sep
 
-from debvader import model
-
+#from debvader import model
+###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
+import sys
+sys.path.insert(0,'.')
+import model
+######
 
 def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder_z = False):
     """
