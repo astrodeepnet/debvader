@@ -23,9 +23,10 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/BastienArcelin/debvader",
     include_package_data=True,
-    packages=['data','debvader'],
+    packages=['debvader'],
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3.6",
     ],
+    package_data={'debvader': ['data/*']},
 )

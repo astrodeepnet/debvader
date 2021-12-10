@@ -1,5 +1,6 @@
 import os
 from typing import List
+import pkg_resources
 
 import numpy as np
 import tensorflow as tf
@@ -10,13 +11,8 @@ from scipy import optimize
 from skimage import metrics
 import sep
 
-path_folder = os.path.dirname(os.path.abspath(__file__))
+from debvader import model
 
-###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
-import sys
-sys.path.insert(0,'.')
-import model
-######
 
 def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder_z = False):
     """
@@ -56,7 +52,8 @@ def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_enc
     )
 
     # Load the weights corresponding to the chosen survey
-    loading_path = str(path_folder) + "/../data/weights/" + survey + "/not_normalised/loss/"
+    data_path = pkg_resources.resource_filename('debvader', "data/")
+    loading_path = os.path.join(data_path, "weights/", survey, "not_normalised/loss/")
     print(loading_path)
     latest = tf.train.latest_checkpoint(loading_path)
     net.load_weights(latest)
