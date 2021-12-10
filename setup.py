@@ -28,4 +28,5 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3.6",
     ],
+    package_data={'debvader': ['data/*']},
 )

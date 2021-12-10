@@ -1,16 +1,11 @@
 import os
+import pkg_resources
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
 import debvader
 from debvader import model
-
-###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
-#import sys
-#sys.path.insert(0,'.')
-#import model
-######
 
 def train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose=1):
     """
@@ -44,7 +39,9 @@ def define_callbacks(vae_or_deblender, survey_name):
         vae_or_deblender: training a VAE or a deblender. Used for the saving path.
         survey_name: name of the survey from which the data comes. Used for the saving path.
     """
-    saving_path = '../data/weights/'+str(survey_name)+'/'+str(vae_or_deblender)+'/'
+    data_path = pkg_resources.resource_filename('debvader', "data/")
+
+    saving_path = os.path.join(data_path, 'weights/', str(survey_name), str(vae_or_deblender), "")
     checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_mse/weights_noisy_v4.ckpt', monitor='val_mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
     checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_loss/weights_noisy_v4.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
 
@@ -100,7 +97,11 @@ def train_deblender(survey_name, from_survey, epochs, training_data_vae, validat
 
     # Start from the weights of an already trained network (recommended if possible)
     if from_survey!=None:
-        path_output = '../data/weights/'+str(from_survey)+'/not_normalised/'
+
+        data_path = pkg_resources.resource_filename('debvader', "data/")
+        path_output = os.path.join(data_path, 'weights/', str(from_survey), 'not_normalised/')
+
+        print(path_output)
         latest = tf.train.latest_checkpoint(path_output)
         net.load_weights(latest)
 
