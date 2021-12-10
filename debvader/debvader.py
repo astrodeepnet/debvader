@@ -113,7 +113,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
         output_images_mean, output_images_distribution = deblend(net, cutout_images[list_idx], normalised=normalised)  
     if list_idx==[]:
         print('No galaxy deblended. End of the iterative procedure.')
-        return field_image, field_image, np.zeros((field_size,field_size,nb_of_bands)), np.zeros((field_size,field_size,nb_of_bands)), np.zeros((field_size,field_size,nb_of_bands)), cutout_images, output_images_mean, output_images_distribution, np.zeros((len(output_images_mean),2)), list_idx
+        return field_image, field_image, np.zeros((field_size,field_size,nb_of_bands)), np.zeros((field_size,field_size,nb_of_bands)), np.zeros((field_size,field_size,nb_of_bands)), cutout_images, output_images_mean, output_images_distribution, np.zeros((len(output_images_mean),2)), list_idx, 0
     
     if epistemic_uncertainty_estimation:
         # Compute epistemic uncertainty (from the decoder of the deblender)
@@ -151,6 +151,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
 
     # Subtract each deblended galaxy to the field and add it to the denoised field.
     shifts=np.zeros((len(output_images_mean),2))
+    nb_of_galaxies_in_deblended_field=0
     for i,k in enumerate (list_idx):
        # Different subtraction if optimisation on positions is required
         if optimise_positions:
@@ -165,6 +166,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
                     denoised_field[:,:,j] +=scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
+                    nb_of_galaxies_in_deblended_field+=1/nb_of_bands
         else:
             for j in range (nb_of_bands):
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
@@ -175,8 +177,9 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
                     denoised_field[:,:,j] +=scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
+                    nb_of_galaxies_in_deblended_field+=1/nb_of_bands
  
-    return field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx
+    return field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx, int(nb_of_galaxies_in_deblended_field)
 
 
 
@@ -196,7 +199,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
    '''
 
     field_image = field_image.copy()
-    field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center_total, mse_step = deblending_step(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised, factor=factor)
+    field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center_total, mse_step, nb_of_galaxies_in_deblended_field = deblending_step(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised, factor=factor)
 
     field_img_init = field_img_save.copy()
     shifts_previous = []
@@ -207,6 +210,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
     denoised_field_epistemic_total = denoised_field_epistemic
     cutout_images_total = cutout_images
     output_images_total = output_images_mean
+    nb_of_galaxies_in_deblended_field_total = nb_of_galaxies_in_deblended_field
 
     while (len(shifts)>len(shifts_previous)):
 
@@ -214,7 +218,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         mse_step_previous=mse_step
         shifts_previous = shifts
 
-        field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center_total, mse_step = deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised,factor=factor)
+        field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center_total, mse_step, nb_of_galaxies_in_deblended_field = deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised,factor=factor)
 
         #field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_img_init, detection_up_to_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
         #field_img_init=field_img_save.copy()
@@ -225,10 +229,11 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         shifts = np.concatenate((shifts_previous, shifts), axis = 0)
         cutout_images_total = np.concatenate((cutout_images_total, cutout_images), axis = 0)
         output_images_total = np.concatenate((output_images_total, output_images_mean), axis = 0)
+        nb_of_galaxies_in_deblended_field_total += nb_of_galaxies_in_deblended_field
         diff_mse = mse_step-mse_step_previous
         k+=1
 
-        print(str(len(shifts))+' galaxies found up to this step.')
+        print(str(nb_of_galaxies_in_deblended_field_total)+' galaxies found up to this step.')
         print('deta_mse = '+str(diff_mse)+', mse_iteration = '+str(mse_step)+' and mse_previous_step = '+str(mse_step_previous))
 
     print('converged !')
@@ -280,8 +285,8 @@ def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_i
                 idx_to_remove.append(i)
         detection_k = np.delete(detection_k, idx_to_remove, axis = 0)
      
-    field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
-    print("Deblend "+str(len(shifts))+' more galaxy(ies)')
+    field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx, nb_of_galaxies_in_deblended_field = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+    print("Deblend "+str(nb_of_galaxies_in_deblended_field)+' more galaxy(ies)')
     detection_confirmed = np.zeros((len(list_idx),2))
     for z,i in enumerate (list_idx):
         detection_confirmed[z][0] = detection_k[i][0]+np.round(shifts[z][0])
@@ -293,7 +298,7 @@ def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_i
     else:
         galaxy_distances_to_center_total = np.concatenate((galaxy_distances_to_center_total, detection_confirmed), axis = 0)
 
-    return field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center_total, mse_step
+    return field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center_total, mse_step, nb_of_galaxies_in_deblended_field
 
 
 
