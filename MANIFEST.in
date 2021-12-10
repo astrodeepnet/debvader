@@ -1,8 +1,8 @@
-include data/weights/dc2/not_normalised/checkpoint
-include data/weights/dc2/not_normalised/cp-{epoch:04d}.ckpt.data-00000-of-00002
-include data/weights/dc2/not_normalised/cp-{epoch:04d}.ckpt.data-00001-of-00002
-include data/weights/dc2/not_normalised/cp-{epoch:04d}.ckpt.index
-include data/dc2_imgs/imgs_dc2.npy
-include data/dc2_imgs/field/field_img.npy
-include data/dc2_imgs/field/galaxies_from_field.npy
-include data/dc2_imgs/field/ra_dec_coord.npyd
+include debvader/data/weights/dc2/not_normalised/checkpoint
+include debvader/data/weights/dc2/not_normalised/cp-{epoch:04d}.ckpt.data-00000-of-00002
+include debvader/data/weights/dc2/not_normalised/cp-{epoch:04d}.ckpt.data-00001-of-00002
+include debvader/data/weights/dc2/not_normalised/cp-{epoch:04d}.ckpt.index
+include debvader/data/dc2_imgs/imgs_dc2.npy
+include debvader/data/dc2_imgs/field/field_img.npy
+include debvader/data/dc2_imgs/field/galaxies_from_field.npy
+include debvader/data/dc2_imgs/field/ra_dec_coord.npy
