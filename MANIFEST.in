@@ -5,4 +5,4 @@ include data/weights/dc2/not_normalised/cp-{epoch:04d}.ckpt.index
 include data/dc2_imgs/imgs_dc2.npy
 include data/dc2_imgs/field/field_img.npy
 include data/dc2_imgs/field/galaxies_from_field.npy
-include data/dc2_imgs/field/ra_dec_coord.npy
+include data/dc2_imgs/field/ra_dec_coord.npyd
