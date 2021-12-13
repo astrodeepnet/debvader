@@ -168,7 +168,8 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
                     denoised_field[:,:,j] +=scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
-                    nb_of_galaxies_in_deblended_field+=1/nb_of_bands
+                    if i==0: 
+                        nb_of_galaxies_in_deblended_field+=1
         else:
             for j in range (nb_of_bands):
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
@@ -179,7 +180,8 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
                     denoised_field[:,:,j] +=scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
-                    nb_of_galaxies_in_deblended_field+=1/nb_of_bands
+                    if i==0:
+                        nb_of_galaxies_in_deblended_field+=1
  
     return field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx, int(nb_of_galaxies_in_deblended_field)
 
