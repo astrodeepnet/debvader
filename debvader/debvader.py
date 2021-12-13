@@ -11,12 +11,7 @@ from scipy import optimize
 from skimage import metrics
 import sep
 
-#from debvader import model
-###### TO SUPRESSS AND UNCOMMENT PREVIOUS LINES
-import sys
-sys.path.insert(0,'.')
-import model
-######
+from debvader import model
 
 def load_deblender(survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder_z = False):
     """
@@ -153,15 +148,22 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
     shifts=np.zeros((len(output_images_mean),2))
     nb_of_galaxies_in_deblended_field=0
     for i,k in enumerate (list_idx):
+        epistemic_uncertainty_normalised = np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2])
+        center_img_start=int(cutout_size/2)-5
+        center_img_end=int(cutout_size/2)+5
+        mse_center_img = metrics.mean_squared_error(cutout_images[k,center_img_start:center_img_end,center_img_start:center_img_end],output_images_mean[i,center_img_start:center_img_end,center_img_start:center_img_end])
+
        # Different subtraction if optimisation on positions is required
         if optimise_positions:
             opt = optimize.least_squares(fun,(0.,0.), args=(field_image[0,:,:,2],scipy.ndimage.shift(output_images_mean_padded[i,:,:,2],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))), bounds=(-3,3))
             shifts[i]=opt.x
+
             for j in range (nb_of_bands):
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
                 if epistemic_uncertainty_estimation:
                     denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
-                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:],output_images_mean[i,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
+                
+                if (epistemic_uncertainty_normalised>epistemic_criterion) or (mse_center_img>mse_criterion): # avoid to add galaxies generated with too high uncertainty
                     pass
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0]+opt.x[0],galaxy_distances_to_center[k][1]+opt.x[1]))
@@ -172,7 +174,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                 denoised_field_std[:,:,j] +=scipy.ndimage.shift(output_images_stddev_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
                 if epistemic_uncertainty_estimation:
                    denoised_field_epistemic[:,:,j] +=scipy.ndimage.shift(output_images_epistemic_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
-                if ((np.sum(output_images_epistemic_padded[i,:,:,2])/np.sum(output_images_mean_padded[i,:,:,2]))>epistemic_criterion) or (metrics.mean_squared_error(cutout_images[k,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:],output_images_mean[i,int(cutout_size/2)-5:int(cutout_size/2)+5,int(cutout_size/2)-5:int(cutout_size/2)+5,:])>mse_criterion): # avoid to add galaxies generated with too high uncertainty
+                if (epistemic_uncertainty_normalised>epistemic_criterion) or (mse_center_img>mse_criterion): # avoid to add galaxies generated with too high uncertainty
                     pass
                 else:
                     field_image[0,:,:,j] -= scipy.ndimage.shift(output_images_mean_padded[i,:,:,j],shift = (galaxy_distances_to_center[k][0],galaxy_distances_to_center[k][1]))
