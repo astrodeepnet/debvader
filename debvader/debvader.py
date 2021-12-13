@@ -218,7 +218,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
 
     while (len(shifts)>len(shifts_previous)):
 
-        print("iteration "+str(k))
+        print(f'iteration {k}')
         mse_step_previous=mse_step
         shifts_previous = shifts
 
@@ -237,8 +237,8 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         diff_mse = mse_step-mse_step_previous
         k+=1
 
-        print(str(nb_of_galaxies_in_deblended_field_total)+' galaxies found up to this step.')
-        print('deta_mse = '+str(diff_mse)+', mse_iteration = '+str(mse_step)+' and mse_previous_step = '+str(mse_step_previous))
+        print(f'{nb_of_galaxies_in_deblended_field_total} galaxies found up to this step.')
+        print(f'deta_mse = {diff_mse}, mse_iteration = {mse_step} and mse_previous_step = {mse_step_previous}')
 
     print('converged !')
  
@@ -290,7 +290,7 @@ def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_i
         detection_k = np.delete(detection_k, idx_to_remove, axis = 0)
      
     field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx, nb_of_galaxies_in_deblended_field = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
-    print("Deblend "+str(nb_of_galaxies_in_deblended_field)+' more galaxy(ies)')
+    print(f'Deblend {nb_of_galaxies_in_deblended_field} more galaxy(ies)')
     detection_confirmed = np.zeros((len(list_idx),2))
     for z,i in enumerate (list_idx):
         detection_confirmed[z][0] = detection_k[i][0]+np.round(shifts[z][0])
