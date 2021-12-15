@@ -25,6 +25,7 @@ It requires few packages to work:
 - `matplotlib`
 - `pandas`
 - `jupyter`
+- `sep`
 
 It can then be pip installed with
 ``` 
