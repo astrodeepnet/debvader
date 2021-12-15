@@ -9,7 +9,7 @@ requirements = [
     "tensorflow-probability==0.9.0",
     "matplotlib",
     "jupyter",
-    "photutils",
+    "sep",
     "scikit-image"
 ]
 
