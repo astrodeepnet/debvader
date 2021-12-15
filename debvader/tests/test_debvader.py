@@ -6,30 +6,28 @@ def test_cutouts_border():
     field_size=15
     nb_of_bands = 3
 
+    # create image
     image = np.random.rand(1, field_size, field_size, nb_of_bands)
+
+    # test when cutout is not close to the edge 
+    galaxy_distances_to_center = [[-4,-3]]
+    cutout_size = 5
+    cutout = extract_cutouts(field_image=image.copy(), field_size=15, galaxy_distances_to_center=galaxy_distances_to_center, cutout_size=cutout_size, nb_of_bands=nb_of_bands)
+    np.testing.assert_array_equal(cutout[0], image[:, 1:6, 2:7])
+
+    # test when cutout is just contained within the boundary 
     galaxy_distances_to_center = [[5,5]]
     cutout_size = 5
-
     cutout = extract_cutouts(field_image=image.copy(), field_size=15, galaxy_distances_to_center=galaxy_distances_to_center, cutout_size=cutout_size, nb_of_bands=nb_of_bands)
-
-    assert cutout[0][0][1][2][0] == image[0][11][12][0]
-    assert cutout[0][0][4][4][2] == image[0][14][14][2]
-    assert cutout[0][0][2][3][1] == image[0][12][13][1]
+    np.testing.assert_array_equal(cutout[0], image[:,10:, 10:])
 
     galaxy_distances_to_center = [[-5,-5]]
     cutout_size = 5
-
     cutout = extract_cutouts(field_image=image.copy(), field_size=15, galaxy_distances_to_center=galaxy_distances_to_center, cutout_size=cutout_size, nb_of_bands=nb_of_bands)
-
-    assert cutout[0][0][4][4][0] == image[0][4][4][0]
-    assert cutout[0][0][2][3][1] == image[0][2][3][1]
-    assert cutout[0][0][1][2][2] == image[0][1][2][2]
+    np.testing.assert_array_equal(cutout[0], image[:, :5, :5])
 
     # test when cutout is too large
-    
     galaxy_distances_to_center = [[6,6]]
     cutout_size = 5
-
     cutout = extract_cutouts(field_image=image.copy(), field_size=15, galaxy_distances_to_center=galaxy_distances_to_center, cutout_size=cutout_size, nb_of_bands=nb_of_bands)
-
     assert len(cutout[1]) == 0
