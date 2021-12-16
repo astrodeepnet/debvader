@@ -293,7 +293,24 @@ def detect_objects(field_image, factor=3):
     bkg = sep.Background(r_band_data)
 
     r_band_foreground = r_band_data - bkg
-    objects = sep.extract(r_band_foreground, factor, err=bkg.globalrms)
+
+    DETECT_THRESH = 0.8
+    deblend_cont = 0.00001
+    deblend_nthresh = 64
+    minarea = 4
+    filter_type = 'conv'
+    # 7x7 convolution mask of a gaussian PSF with FWHM = 3.0 pixels.
+    filter_kernel = np.array([
+        [0.004963, 0.021388, 0.051328, 0.068707, 0.051328, 0.021388, 0.004963],
+        [0.021388, 0.092163, 0.221178, 0.296069, 0.221178, 0.092163, 0.021388],
+        [0.051328, 0.221178, 0.530797, 0.710525, 0.530797, 0.221178, 0.051328],
+        [0.068707, 0.296069, 0.710525, 0.951108, 0.710525, 0.296069, 0.068707],
+        [0.051328, 0.221178, 0.530797, 0.710525, 0.530797, 0.221178, 0.051328],
+        [0.021388, 0.092163, 0.221178, 0.296069, 0.221178, 0.092163, 0.021388],
+        [0.004963, 0.021388, 0.051328, 0.068707, 0.051328, 0.021388, 0.004963],
+    ])
+
+    objects = sep.extract(data=r_band_foreground, thresh=DETECT_THRESH, deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, minarea=minarea, filter_kernel=filter_kernel, filter_type=filter_type)
 
     for i in range(len(objects['y'])):
         galaxy_distances_to_center.append((np.round(-int(field_size/2) + objects['y'][i]) , np.round(-int(field_size/2) + objects['x'][i])))
