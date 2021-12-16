@@ -252,6 +252,9 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         #field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_img_init, detection_up_to_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
         #field_img_init=field_img_save.copy()
 
+        if res_step["list_idx"] is None:
+            break
+
         denoised_field_total += res_step['model_image']
         denoised_field_std_total += res_step['model_image_std']
         denoised_field_epistemic_total += res_step['model_image_epistemic_uncertainty']
@@ -310,7 +313,7 @@ def detect_objects(field_image, factor=3):
         [0.004963, 0.021388, 0.051328, 0.068707, 0.051328, 0.021388, 0.004963],
     ])
 
-    objects = sep.extract(data=r_band_foreground, thresh=DETECT_THRESH, deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, minarea=minarea, filter_kernel=filter_kernel, filter_type=filter_type)
+    objects = sep.extract(data=r_band_foreground, thresh=DETECT_THRESH, err=bkg.globalrms, deblend_cont=deblend_cont, deblend_nthresh=deblend_nthresh, minarea=minarea, filter_kernel=filter_kernel, filter_type=filter_type)
 
     for i in range(len(objects['y'])):
         galaxy_distances_to_center.append((np.round(-int(field_size/2) + objects['y'][i]) , np.round(-int(field_size/2) + objects['x'][i])))
@@ -344,7 +347,11 @@ def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_i
     
     res_step = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
 
-    #field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx, nb_of_galaxies_in_deblended_field = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+    # field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx, nb_of_galaxies_in_deblended_field = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+    if res_step['nb_of_galaxies_in_model'] is None:
+        print("No more galaxies found")
+        return res_step
+
     print(f'Deblend '+str(res_step['nb_of_galaxies_in_model'])+' more galaxy(ies)')
     detection_confirmed = np.zeros((len(res_step['list_idx']),2))
     for z,i in enumerate (res_step['list_idx']):
@@ -355,7 +362,7 @@ def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_i
     if not isinstance(galaxy_distances_to_center_total, np.ndarray):
         res_step['galaxy_distances_to_center_total']=detection_confirmed
     else:
-        res_step['galaxy_distances_to_center_total']= np.concatenate((galaxy_distances_to_center_total, detection_confirmed), axis = 0)
+        res_step['galaxy_distances_to_center_total']= np.concatenate((galaxy_distances_to_center_total, detection_confirmed), axis=0)
 
     return res_step
 
