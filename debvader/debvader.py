@@ -262,11 +262,15 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
     shifts_previous = []
     k=1
     diff_mse=-1
+
     denoised_field_total = res_step['model_image']
     denoised_field_std_total = res_step['model_image_std']
     denoised_field_epistemic_total = res_step['model_image_epistemic_uncertainty']
     cutout_images_total = res_step['cutout_images']
     output_images_total = res_step['output_images_mean']
+    output_images_distribution = res_deblend['output_images_distribution']
+    shifts = res_deblend['shifts']
+    list_idx = res_deblend['list_idx']
     nb_of_galaxies_in_deblended_field_total = res_step['nb_of_galaxies_in_model']
 
     while (len(res_step['shifts'])>len(shifts_previous)):
@@ -288,6 +292,9 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         denoised_field_epistemic_total += res_step['model_image_epistemic_uncertainty']
         cutout_images_total = np.concatenate((cutout_images_total, res_step['cutout_images']), axis = 0)
         output_images_total = np.concatenate((output_images_total, res_step['output_images_mean']), axis = 0)
+        output_images_distribution = np.concatenate((output_images_distribution, res_step['output_images_distribution']), axis = 0)
+        shifts +=res_step['shifts']
+        list_idx += res_deblend['list_idx']
         nb_of_galaxies_in_deblended_field_total += res_step['nb_of_galaxies_in_model']
         diff_mse = res_step['mse_step']-mse_step_previous
         k+=1
@@ -296,17 +303,21 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         print(f'deta_mse = {diff_mse}, mse_iteration = '+str(res_step['mse_step'])+' and mse_previous_step = '+str(mse_step_previous))
 
     print('converged !')
-    
+
 
     # dictionnary to return
     res_total = dict()
     res_total['field_image']=field_img_init
-    res_total['deblended_image']=res_step['field_image']
+    res_total['deblended_image']=res_step['field_image'] #TODO: check this, I think it should be res_step['deblended_image']
     res_total['model_image']=denoised_field_total
     res_total['model_image_std']=denoised_field_std_total
     res_total['model_image_epistemic_uncertainty']=denoised_field_epistemic_total
     res_total['cutout_images']=cutout_images_total
     res_total['output_images_mean']=output_images_total
+    res_total['output_images_distribution']=output_images_distribution
+    res_total['shifts'] = shifts
+    res_total['list_idx'] = list_idx
+    res_total['nb_of_galaxies_in_model'] = nb_of_galaxies_in_model
 
     return res_total
 
@@ -355,7 +366,7 @@ def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_i
     paramters:
         net: network used to deblend the field
         field_image: image of the field to deblend
-        galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
+        galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels. #TODO: this description is probably wrong 
         cutout_images: stamps centered on the galaxies to deblend
         cutout_size: size of the stamps
         nb_of_bands: number of filters in the image
