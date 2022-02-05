@@ -241,7 +241,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
 
 
 
-def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, epistemic_uncertainty_estimation= False, epistemic_criterion=0., mse_criterion=0., normalised=False):
+def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, epistemic_uncertainty_estimation= False, epistemic_criterion=100., mse_criterion=100., normalised=False):
     '''
     Do the iterative deblending of a scene
     paramters:
@@ -349,7 +349,7 @@ def detect_objects(field_image):
     return np.array(galaxy_distances_to_center)
 
 
-def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, epistemic_uncertainty_estimation = False, epistemic_criterion=100., mse_criterion=0., normalised=False):
+def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_images = None, cutout_size = 59, nb_of_bands = 6, optimise_positions=False, epistemic_uncertainty_estimation = False, epistemic_criterion=100., mse_criterion=100., normalised=False):
     '''
     One step of the iterative procedure
     paramters:
