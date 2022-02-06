@@ -143,6 +143,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
     res_deblend['shifts']=None
     res_deblend['list_idx']=None
     res_deblend['nb_of_galaxies_in_model']=None
+    res_deblend['nb_of_detected_objects']=len(galaxy_distances_to_center)
 
     field_image = field_image.copy()
     # Deblend the cutouts around the detected galaxies. If needed, create the cutouts.
@@ -271,7 +272,8 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
     output_images_distribution_total = [res_step['output_images_distribution']]
     shifts = res_step['shifts']
     list_idx = res_step['list_idx']
-    nb_of_galaxies_in_deblended_field_total = res_step['nb_of_galaxies_in_model']
+    nb_of_galaxies_in_deblended_field_total = [res_step['nb_of_galaxies_in_model']]
+    nb_of_detected_objects_total = [res_step['nb_of_detected_objects']]
 
     while (len(res_step['shifts'])>len(shifts_previous)):
 
@@ -294,9 +296,10 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         output_images_total = np.concatenate((output_images_total, res_step['output_images_mean']), axis = 0)
         output_images_distribution_total += [res_step['output_images_distribution']]
         shifts.extend(res_step['shifts'])
-        list_idx.extend(res_step['list_idx'])
-        nb_of_galaxies_in_deblended_field_total += res_step['nb_of_galaxies_in_model']
+        list_idx.extend(list(np.array(res_step['list_idx'])+sum(nb_of_detected_objects_total)))
+        nb_of_galaxies_in_deblended_field_total += [res_step['nb_of_galaxies_in_model']]
         diff_mse = res_step['mse_step']-mse_step_previous
+        nb_of_detected_objects_total += [res_step['nb_of_detected_objects']]
         k+=1
 
         print(f'{nb_of_galaxies_in_deblended_field_total} galaxies found up to this step.')
@@ -318,6 +321,7 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
     res_total['shifts'] = shifts
     res_total['list_idx'] = list_idx
     res_total['nb_of_galaxies_in_model'] = nb_of_galaxies_in_deblended_field_total
+    res_total['nb_of_detected_objects'] = nb_of_detected_objects_total
 
     return res_total
 
