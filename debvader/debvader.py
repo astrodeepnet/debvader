@@ -11,6 +11,7 @@ from scipy import optimize
 from skimage import metrics
 import sep
 
+from astropy.table import Table
 from debvader import model
 
 
@@ -130,20 +131,22 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
     field_size = field_image.shape[1]
 
     # Initialise dictionnary to return
-    res_deblend = dict()
+    
+    res_deblend_meta = dict()
+    res_deblend_meta['field_image']=field_image
+    res_deblend_meta['deblended_image']=None
+    res_deblend_meta['model_image']=None
+    res_deblend_meta['model_image_std']=None
+    res_deblend_meta['model_image_epistemic_uncertainty']=None
+    res_deblend_meta['nb_of_galaxies_in_model']=None
+    res_deblend_meta['nb_of_detected_objects']=len(galaxy_distances_to_center)
 
-    res_deblend['field_image']=field_image
-    res_deblend['deblended_image']=field_image
-    res_deblend['model_image']=None
-    res_deblend['model_image_std']=None
-    res_deblend['model_image_epistemic_uncertainty']=None
+    res_deblend = dict()
     res_deblend['cutout_images']=None
     res_deblend['output_images_mean']=None
     res_deblend['output_images_distribution']=None
     res_deblend['shifts']=None
     res_deblend['list_idx']=None
-    res_deblend['nb_of_galaxies_in_model']=None
-    res_deblend['nb_of_detected_objects']=len(galaxy_distances_to_center)
 
     field_image = field_image.copy()
     # Deblend the cutouts around the detected galaxies. If needed, create the cutouts.
@@ -227,12 +230,19 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                     nb_of_galaxies_in_deblended_field+=1
 
     # Update dictionnary to return
-    res_deblend['cutout_images']=list(cutout_images[list_idx])
-    res_deblend['shifts']=list(shifts)
-    res_deblend['list_idx']=list(list_idx)
-    res_deblend['nb_of_galaxies_in_model']=int(nb_of_galaxies_in_deblended_field)
+    res_deblend_meta['deblended_image']=field_image
+    res_deblend_meta['model_image']=denoised_field
+    res_deblend_meta['model_image_std']=denoised_field_std
+    res_deblend_meta['model_image_epistemic_uncertainty']=denoised_field_epistemic
+    res_deblend_meta['nb_of_galaxies_in_model']=int(nb_of_galaxies_in_deblended_field)
 
-    return res_deblend
+    res_deblend['cutout_images']=list(cutout_images[list_idx])
+    res_deblend['output_images_mean']=list(output_images_mean)
+    res_deblend['output_images_distribution']=list(output_images_distribution)
+    res_deblend['shifts']=list(shifts)
+    res_deblend['list_idx']=list_idx
+
+    return res_deblend_meta, Table(res_deblend)
 
 
 
@@ -251,31 +261,32 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
    '''
 
     field_image = field_image.copy()
-    res_step = deblending_step(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+    res_step_meta, res_step = deblending_step(net, field_image, galaxy_distances_to_center, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
 
-    field_img_init = res_step['field_image'].copy()
+    field_img_init = res_step_meta['field_image'].copy()
     shifts_previous = []
     k=1
     diff_mse=-1
 
-    denoised_field_total = res_step['model_image']
-    denoised_field_std_total = res_step['model_image_std']
-    denoised_field_epistemic_total = res_step['model_image_epistemic_uncertainty']
-    cutout_images_total = res_step['cutout_images']
-    output_images_total = res_step['output_images_mean']
-    output_images_distribution_total = [res_step['output_images_distribution']]
-    shifts = res_step['shifts']
-    list_idx = res_step['list_idx']
-    nb_of_galaxies_in_deblended_field_total = [res_step['nb_of_galaxies_in_model']]
-    nb_of_detected_objects_total = [res_step['nb_of_detected_objects']]
+    denoised_field_total = res_step_meta['model_image']
+    denoised_field_std_total = res_step_meta['model_image_std']
+    denoised_field_epistemic_total = res_step_meta['model_image_epistemic_uncertainty']
+    nb_of_galaxies_in_deblended_field_total = [res_step_meta['nb_of_galaxies_in_model']]
+    nb_of_detected_objects_total = [res_step_meta['nb_of_detected_objects']]
+
+    cutout_images_total = list(res_step['cutout_images'])
+    output_images_total = list(res_step['output_images_mean'])
+    output_images_distribution_total = list(res_step['output_images_distribution'])
+    shifts = list(res_step['shifts'])
+    list_idx = list(res_step['list_idx'])
 
     while (len(res_step['shifts'])>len(shifts_previous)):
 
         print(f'iteration {k}')
-        mse_step_previous=res_step['mse_step']
+        mse_step_previous=res_step_meta['mse_step']
         shifts_previous = res_step['shifts']
 
-        res_step = deblending_step(net, res_step['deblended_image'], res_step['galaxy_distances_to_center_total'], cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+        res_step_meta, res_step = deblending_step(net, res_step_meta['deblended_image'], res_step_meta['galaxy_distances_to_center_total'], cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
 
         #field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_img_init, detection_up_to_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
         #field_img_init=field_img_save.copy()
@@ -283,41 +294,45 @@ def iterative_deblending(net, field_image, galaxy_distances_to_center, cutout_im
         if res_step["list_idx"] is None:
             break
 
-        denoised_field_total += res_step['model_image']
-        denoised_field_std_total += res_step['model_image_std']
-        denoised_field_epistemic_total += res_step['model_image_epistemic_uncertainty']
-        cutout_images_total = np.concatenate((cutout_images_total, res_step['cutout_images']), axis = 0)
-        output_images_total = np.concatenate((output_images_total, res_step['output_images_mean']), axis = 0)
-        output_images_distribution_total += [res_step['output_images_distribution']]
-        shifts.extend(res_step['shifts'])
-        list_idx.extend(list(np.array(res_step['list_idx'])+sum(nb_of_detected_objects_total)))
-        nb_of_galaxies_in_deblended_field_total += [res_step['nb_of_galaxies_in_model']]
-        diff_mse = res_step['mse_step']-mse_step_previous
-        nb_of_detected_objects_total += [res_step['nb_of_detected_objects']]
+        cutout_images_total += list(res_step['cutout_images'])
+        output_images_total += list(res_step['output_images_mean'])
+        output_images_distribution_total += list(res_step['output_images_distribution'])
+        shifts += list(res_step['shifts'])
+        list_idx += list(np.array(res_step['list_idx'])+sum(nb_of_detected_objects_total))
+
+        denoised_field_total += res_step_meta['model_image']
+        denoised_field_std_total += res_step_meta['model_image_std']
+        denoised_field_epistemic_total += res_step_meta['model_image_epistemic_uncertainty']
+        nb_of_galaxies_in_deblended_field_total += [res_step_meta['nb_of_galaxies_in_model']]
+        diff_mse = res_step_meta['mse_step']-mse_step_previous
+        nb_of_detected_objects_total += [res_step_meta['nb_of_detected_objects']]
         k+=1
 
         print(f'{nb_of_galaxies_in_deblended_field_total} galaxies found up to this step.')
-        print(f'deta_mse = {diff_mse}, mse_iteration = '+str(res_step['mse_step'])+' and mse_previous_step = '+str(mse_step_previous))
+        print(f'deta_mse = {diff_mse}, mse_iteration = '+str(res_step_meta['mse_step'])+' and mse_previous_step = '+str(mse_step_previous))
 
     print('converged !')
 
 
     # dictionnary to return
+
+    res_total_meta = dict()
+    res_total_meta['field_image']=field_img_init
+    res_total_meta['deblended_image']=res_step_meta['field_image'] #TODO: check this, I think it should be res_step['deblended_image']
+    res_total_meta['model_image']=denoised_field_total
+    res_total_meta['model_image_std']=denoised_field_std_total
+    res_total_meta['model_image_epistemic_uncertainty']=denoised_field_epistemic_total
+    res_total_meta['nb_of_galaxies_in_model'] = nb_of_galaxies_in_deblended_field_total
+    res_total_meta['nb_of_detected_objects'] = nb_of_detected_objects_total
+
     res_total = dict()
-    res_total['field_image']=field_img_init
-    res_total['deblended_image']=res_step['field_image'] #TODO: check this, I think it should be res_step['deblended_image']
-    res_total['model_image']=denoised_field_total
-    res_total['model_image_std']=denoised_field_std_total
-    res_total['model_image_epistemic_uncertainty']=denoised_field_epistemic_total
     res_total['cutout_images']=cutout_images_total
     res_total['output_images_mean']=output_images_total
     res_total['output_images_distribution']=output_images_distribution_total
     res_total['shifts'] = shifts
     res_total['list_idx'] = list_idx
-    res_total['nb_of_galaxies_in_model'] = nb_of_galaxies_in_deblended_field_total
-    res_total['nb_of_detected_objects'] = nb_of_detected_objects_total
 
-    return res_total
+    return res_total_meta, Table(res_total)
 
 
 def detect_objects(field_image):
@@ -382,26 +397,26 @@ def deblending_step(net, field_image, galaxy_distances_to_center_total, cutout_i
         detection_k = np.delete(detection_k, idx_to_remove, axis = 0)
      
     
-    res_step = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
+    res_step_meta, res_step = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
 
     # field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, list_idx, nb_of_galaxies_in_deblended_field = deblend_field(net, field_image, detection_k, cutout_images = cutout_images, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
-    if res_step['nb_of_galaxies_in_model'] is None:
+    if res_step_meta['nb_of_galaxies_in_model'] is None:
         print("No more galaxies found")
-        return res_step
+        return res_step_meta, res_step
 
-    print(f'Deblend '+str(res_step['nb_of_galaxies_in_model'])+' more galaxy(ies)')
+    print(f'Deblend '+str(res_step_meta['nb_of_galaxies_in_model'])+' more galaxy(ies)')
     detection_confirmed = np.zeros((len(res_step['list_idx']),2))
     for z,i in enumerate (res_step['list_idx']):
         detection_confirmed[z][0] = detection_k[i][0]+np.round(res_step['shifts'][z][0])
         detection_confirmed[z][1] = detection_k[i][1]+np.round(res_step['shifts'][z][1])
-    res_step['mse_step'] = metrics.mean_squared_error(res_step['field_image'][0],res_step['model_image'])
+    res_step_meta['mse_step'] = metrics.mean_squared_error(res_step_meta['field_image'][0],res_step_meta['model_image'])
 
     if not isinstance(galaxy_distances_to_center_total, np.ndarray):
-        res_step['galaxy_distances_to_center_total']=detection_confirmed
+        res_step_meta['galaxy_distances_to_center_total']=detection_confirmed
     else:
-        res_step['galaxy_distances_to_center_total']= np.concatenate((galaxy_distances_to_center_total, detection_confirmed), axis=0)
+        res_step_meta['galaxy_distances_to_center_total']= np.concatenate((galaxy_distances_to_center_total, detection_confirmed), axis=0)
 
-    return res_step
+    return res_step_meta, res_step
 
 
 def extract_cutouts(field_image, field_size, galaxy_distances_to_center,cutout_size=59, nb_of_bands = 6):
