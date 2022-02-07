@@ -227,13 +227,7 @@ def deblend_field(net, field_image, galaxy_distances_to_center, cutout_images = 
                     nb_of_galaxies_in_deblended_field+=1
 
     # Update dictionnary to return
-    res_deblend['deblended_image']=field_image
-    res_deblend['model_image']=denoised_field
-    res_deblend['model_image_std']=denoised_field_std
-    res_deblend['model_image_epistemic_uncertainty']=denoised_field_epistemic
-    res_deblend['cutout_images']=cutout_images
-    res_deblend['output_images_mean']=output_images_mean
-    res_deblend['output_images_distribution']=output_images_distribution
+    res_deblend['cutout_images']=list(cutout_images[list_idx])
     res_deblend['shifts']=list(shifts)
     res_deblend['list_idx']=list(list_idx)
     res_deblend['nb_of_galaxies_in_model']=int(nb_of_galaxies_in_deblended_field)
