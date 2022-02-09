@@ -11,7 +11,6 @@ from scipy import optimize
 from skimage import metrics
 import sep
 
-from astropy.table import vstack, Table
 from debvader import model
 import pandas as pd
 
@@ -221,7 +220,7 @@ class DeblendField:
         Calculates the residual field 
 
         parameters: 
-            res_deblend: astropy.table.Table that takes as input the result of deblending. 
+            res_deblend: np.recarray that takes as input the result of deblending. 
                 if left as None, it will automatically use the output of deblend_field 
                 or iterative_deblending function
         returns: 
@@ -243,9 +242,12 @@ class DeblendField:
                 pos_offset = int((self.field_size-self.cutout_size)/2)
 
                 output_images_mean_padded[:,pos_offset:self.cutout_size+pos_offset, pos_offset:self.cutout_size+pos_offset,:] = isolated_galaxy_row['output_images_mean']
-                                    
+
+                # subtract the image of the currently galaxy after positioning it correctly   
+                # TODO: try to avoid using scipy.ndimage.shift here, it is super slow. Diectly subtract at correct index instead of creating a padding?                     
                 x_pos = isolated_galaxy_row['galaxy_distances_to_center_x'] + isolated_galaxy_row['shifts'][0]
                 y_pos = isolated_galaxy_row['galaxy_distances_to_center_y'] + isolated_galaxy_row['shifts'][1]
+
                 for band in range(self.nb_of_bands):
                     deblended_image[0, :, :, band] -= scipy.ndimage.shift(output_images_mean_padded[0, :, :, band], shift=(x_pos, y_pos))
 
@@ -256,7 +258,7 @@ class DeblendField:
         Calculates the predicted mean field, predicted stddev field and epistemic uncertainity field.
 
         parameters: 
-            res_deblend: astropy.table.Table that takes as input the result of deblending. 
+            res_deblend: np.recarray that takes as input the result of deblending. 
                 if left as None, it will automatically use the output of deblend_field or iterative_deblending functions
 
         returns: 
@@ -316,7 +318,7 @@ class DeblendField:
         function to compute: the residual image, predicted mean field, preicted stddev field and predicted_epistemic_field at the same time
 
         parameters: 
-            res_deblend: astropy.table.Table that takes as input the result of deblending. 
+            res_deblend: np.recarray that takes as input the result of deblending. 
                 if left as None, it will automatically use the output of deblend_field or iterative_deblending functions
 
         returns: 
@@ -358,7 +360,7 @@ class DeblendField:
         res_deblend['shifts']=None
         res_deblend['list_idx']=None
 
-        if field_image is None: # Todo: this is not a good way
+        if field_image is None: # TODO: if the user passes a differnet field image instead of self.field it will mess up the self.get_residual (and others) function
             field_image = self.field_image.copy()
 
         field_size = field_image.shape[1]
@@ -373,9 +375,6 @@ class DeblendField:
         if list_idx==[]:
             print('No galaxy deblended. End of the iterative procedure.')
             return res_deblend
-
-        def fun (x, img, net_output): 
-            return metrics.mean_squared_error(img,scipy.ndimage.shift(net_output,shift = (x[0],x[1])))
 
         # Subtract each deblended galaxy to the field and add it to the denoised field.
         shifts = []
@@ -432,6 +431,7 @@ class DeblendField:
         res_deblend['galaxy_distances_to_center_x'] = galaxy_distances_to_center_x
         res_deblend['galaxy_distances_to_center_y'] = galaxy_distances_to_center_y
 
+        # TODO: Return the lines below only if epistemic uncertainity esimation is true (reduce memory overhead)
         res_deblend['epistemic_uncertainty'] = epistemic_uncertainty
         res_deblend['passed_cuts'] = passed_cuts
 
@@ -453,6 +453,7 @@ class DeblendField:
             normalised: boolean to indicate if images need to be normalised
         '''
 
+        # do the first step of deblending
         field_image = self.field_image.copy()
         res_step = self.deblending_step(field_image, cutout_images=cutout_images, optimise_positions=optimise_positions, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion)
         res_deblend = res_step
@@ -464,17 +465,20 @@ class DeblendField:
         diff_mse=-1
 
         nb_of_detected_objects = self.nb_of_detected_objects[0]
-
+        
+        # Now iterate over 
         while (len(res_step['shifts'])>len(shifts_previous)):
 
             print(f'iteration {k}')
             shifts_previous = res_step['shifts']
 
             prev_residual_field = new_residual_field
+
+            # deblending step will run detection and deblending on the residual field 
             res_step = self.deblending_step(prev_residual_field, cutout_images = None, optimise_positions=optimise_positions, mse_criterion=mse_criterion)
 
+            #compute the MSE after this iteration step
             new_residual_field = self.get_residual_field()
-
             self.mse += [metrics.mean_squared_error(prev_residual_field, new_residual_field)]
             #field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_img_init, detection_up_to_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
             #field_img_init=field_img_save.copy()
@@ -510,7 +514,8 @@ class DeblendField:
         # Avoid to have several detection at the same location
         idx_to_remove = []
 
-        # TODO: Fix this part 
+        # TODO: Fix this part to get rid of false detections. 
+        # Ideally call a remove_residual_detection function which can be developed later! 
 
         # if isinstance(galaxy_distances_to_center_total, np.ndarray):
         #    for i in range (len(detection_k)):
@@ -526,7 +531,8 @@ class DeblendField:
             print("No more galaxies found")
             return self.res_deblend
 
-        # ToDo: modify list_idx
+        res_step['list_idx'] += (sum(self.nb_of_deblended_galaxies) - self.nb_of_deblended_galaxies[-1])
+
         print(f'Deblend '+ str(self.nb_of_deblended_galaxies[-1])+' more galaxy(ies)')
         detection_confirmed = np.zeros((len(res_step['list_idx']),2))
 
