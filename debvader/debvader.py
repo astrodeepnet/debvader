@@ -204,7 +204,7 @@ class DeblendField:
         """
         
         self.net = net 
-        self.field_image = field_image.copy()
+        self.field_image = field_image.copy() # TODO: proper garbage collection
         self.field_size = field_image.shape[1]
         self.cutout_size = cutout_size
         self.nb_of_bands = nb_of_bands
