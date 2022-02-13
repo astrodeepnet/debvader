@@ -1,4 +1,7 @@
 # DebVAder: Deblending galaxies with Variational Autoencoders
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![License][license-badge]][license-web]
 [![Paper][arxiv-badge]][arxiv-paper]
@@ -43,3 +46,23 @@ pip install --index-url https://test.pypi.org/simple/ debvader
 ## License
 
 BSD 3-Clause license, see the [LICENSE file](LICENSE) for more information
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/BastienArcelin"><img src="https://avatars.githubusercontent.com/u/43615932?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bastien Arcelin</b></sub></a><br /><a href="https://github.com/BastienArcelin/debvader/commits?author=BastienArcelin" title="Code">💻</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
