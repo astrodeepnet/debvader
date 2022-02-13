@@ -16,6 +16,7 @@ from tensorflow.keras.models import Model
 
 tfd = tfp.distributions
 
+
 def create_encoder(
     input_shape,
     latent_dim,
@@ -25,9 +26,10 @@ def create_encoder(
     dense_activation=None,
 ):
     # Define the prior for the latent space
-    prior = tfd.Independent(
-        tfd.Normal(loc=tf.zeros(latent_dim), scale=1), reinterpreted_batch_ndims=1
-    )
+    # TODO: unused in the code, verify if this prior is needed or not
+    # prior = tfd.Independent(
+    #     tfd.Normal(loc=tf.zeros(latent_dim), scale=1), reinterpreted_batch_ndims=1
+    # )
 
     # Input layer
     input_layer = Input(shape=(input_shape))
@@ -90,8 +92,8 @@ def create_decoder(
             padding="same",
         )(h)
         h = PReLU()(h)
-        
-    h = Conv2D(input_shape[-1]*2, (3, 3), activation="relu", padding="same")(h)
+
+    h = Conv2D(input_shape[-1] * 2, (3, 3), activation="relu", padding="same")(h)
 
     # In case the last convolutional layer does not provide an image of the size of the input image, cropp it.
     cropping = int(h.get_shape()[1] - input_shape[0])
@@ -105,12 +107,15 @@ def create_decoder(
             )(h)
 
     # Build the encoder only
-    h = tfp.layers.DistributionLambda(make_distribution_fn=lambda t: tfd.Normal(loc=t[...,:input_shape[-1]], scale=1e-4 +t[...,input_shape[-1]:])
-                                          ,convert_to_tensor_fn=tfp.distributions.Distribution.sample)(h)
-    
-    
-    
-    return Model(input_layer,h)
+    h = tfp.layers.DistributionLambda(
+        make_distribution_fn=lambda t: tfd.Normal(
+            loc=t[..., : input_shape[-1]], scale=1e-4 + t[..., input_shape[-1] :]
+        ),
+        convert_to_tensor_fn=tfp.distributions.Distribution.sample,
+    )(h)
+
+    return Model(input_layer, h)
+
 
 def create_model_vae(
     input_shape,
@@ -128,25 +133,25 @@ def create_model_vae(
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
     """
-    
+
     encoder = create_encoder(
-    input_shape,
-    latent_dim,
-    filters,
-    kernels,
-    conv_activation=None,
-    dense_activation=None,
-)
-    
+        input_shape,
+        latent_dim,
+        filters,
+        kernels,
+        conv_activation=None,
+        dense_activation=None,
+    )
+
     decoder = create_decoder(
-    input_shape,
-    latent_dim,
-    filters,
-    kernels,
-    conv_activation=None,
-    dense_activation=None,
-)
-    
+        input_shape,
+        latent_dim,
+        filters,
+        kernels,
+        conv_activation=None,
+        dense_activation=None,
+    )
+
     # Define the prior for the latent space
     prior = tfd.Independent(
         tfd.Normal(loc=tf.zeros(latent_dim), scale=1), reinterpreted_batch_ndims=1
@@ -158,7 +163,7 @@ def create_model_vae(
         latent_dim,
         activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01),
     )(encoder(x_input))
-    
-    net = Model(inputs = x_input, outputs = decoder(z))
-    
-    return net, encoder, decoder, Model(inputs = x_input, outputs = z)
+
+    net = Model(inputs=x_input, outputs=decoder(z))
+
+    return net, encoder, decoder, Model(inputs=x_input, outputs=z)

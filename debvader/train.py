@@ -1,13 +1,15 @@
 import os
-import pkg_resources
 
+import pkg_resources
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
-import debvader
 from debvader import model
 
-def train_network(net, epochs, training_data, validation_data, batch_size, callbacks, verbose=1):
+
+def train_network(
+    net, epochs, training_data, validation_data, batch_size, callbacks, verbose=1
+):
     """
     train a network on data for a fixed number of epochs
     parameters:
@@ -20,14 +22,18 @@ def train_network(net, epochs, training_data, validation_data, batch_size, callb
         verbose: display of training (1:yes, 2: no)
     """
 
-    print('\nStart the training')
-    hist = net.fit(training_data[0], training_data[1], epochs=epochs,
-                    batch_size=batch_size,
-                    verbose=verbose,
-                    shuffle=True,
-                    validation_data=(validation_data[0], validation_data[1]),
-                    validation_steps=int(len(validation_data[0])/batch_size),
-                    callbacks=callbacks)
+    print("\nStart the training")
+    hist = net.fit(
+        training_data[0],
+        training_data[1],
+        epochs=epochs,
+        batch_size=batch_size,
+        verbose=verbose,
+        shuffle=True,
+        validation_data=(validation_data[0], validation_data[1]),
+        validation_steps=int(len(validation_data[0]) / batch_size),
+        callbacks=callbacks,
+    )
 
     return hist
 
@@ -39,18 +45,48 @@ def define_callbacks(vae_or_deblender, survey_name):
         vae_or_deblender: training a VAE or a deblender. Used for the saving path.
         survey_name: name of the survey from which the data comes. Used for the saving path.
     """
-    data_path = pkg_resources.resource_filename('debvader', "data/")
+    data_path = pkg_resources.resource_filename("debvader", "data/")
 
-    saving_path = os.path.join(data_path, 'weights/', str(survey_name), str(vae_or_deblender), "")
-    checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_mse/weights_noisy_v4.ckpt', monitor='val_mse', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
-    checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(filepath=saving_path+'val_loss/weights_noisy_v4.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', save_freq='epoch')
+    saving_path = os.path.join(
+        data_path, "weights/", str(survey_name), str(vae_or_deblender), ""
+    )
+    checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(
+        filepath=saving_path + "val_mse/weights_noisy_v4.ckpt",
+        monitor="val_mse",
+        verbose=1,
+        save_best_only=True,
+        save_weights_only=True,
+        mode="min",
+        save_freq="epoch",
+    )
+    checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(
+        filepath=saving_path + "val_loss/weights_noisy_v4.ckpt",
+        monitor="val_loss",
+        verbose=1,
+        save_best_only=True,
+        save_weights_only=True,
+        mode="min",
+        save_freq="epoch",
+    )
 
     callbacks = [checkpointer_val_mse, checkpointer_val_loss]
 
     return callbacks
 
 
-def train_deblender(survey_name, from_survey, epochs, training_data_vae, validation_data_vae, training_data_deblender, validation_data_deblender, nb_of_bands = 6, channel_last = True, batch_size = 5, verbose = 2):
+def train_deblender(
+    survey_name,
+    from_survey,
+    epochs,
+    training_data_vae,
+    validation_data_vae,
+    training_data_deblender,
+    validation_data_deblender,
+    nb_of_bands=6,
+    channel_last=True,
+    batch_size=5,
+    verbose=2,
+):
     """
     function to train a network for a new survey
     survey_name: name of the survey
@@ -65,10 +101,17 @@ def train_deblender(survey_name, from_survey, epochs, training_data_vae, validat
     # Generate a network for training. The architecture is fixed.
     input_shape = (59, 59, nb_of_bands)
     latent_dim = 32
-    filters = [32,64,128,256]
-    kernels = [3,3,3,3]
+    filters = [32, 64, 128, 256]
+    kernels = [3, 3, 3, 3]
 
-    net, encoder, decoder, z = model.create_model_vae(input_shape, latent_dim, filters, kernels, conv_activation=None, dense_activation=None)
+    net, encoder, decoder, z = model.create_model_vae(
+        input_shape,
+        latent_dim,
+        filters,
+        kernels,
+        conv_activation=None,
+        dense_activation=None,
+    )
     print("VAE model")
     net.summary()
 
@@ -81,54 +124,78 @@ def train_deblender(survey_name, from_survey, epochs, training_data_vae, validat
         return K.sum(net.losses)
 
     # Compilation
-    net.compile(optimizer=tf.optimizers.Adam(learning_rate=1e-4), 
-                loss=vae_loss,
-                metrics = ['mse', kl_metric],
-                experimental_run_tf_function=False,
-                )
+    net.compile(
+        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        loss=vae_loss,
+        metrics=["mse", kl_metric],
+        experimental_run_tf_function=False,
+    )
 
     # Check if data format is correct
-    if (channel_last==False) & (training_data_vae.shape[2]!=nb_of_bands):
-        print('The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again.')
+    if not channel_last & (training_data_vae.shape[2] != nb_of_bands):
+        print(
+            "The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again."
+        )
         raise ValueError
-    if channel_last & (training_data_vae.shape[-1]!=nb_of_bands):
-        print('The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again.')
+    if channel_last & (training_data_vae.shape[-1] != nb_of_bands):
+        print(
+            "The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again."
+        )
         raise ValueError
 
     # Start from the weights of an already trained network (recommended if possible)
-    if from_survey!=None:
+    if from_survey is not None:
 
-        data_path = pkg_resources.resource_filename('debvader', "data/")
-        path_output = os.path.join(data_path, 'weights/', str(from_survey), 'not_normalised/')
+        data_path = pkg_resources.resource_filename("debvader", "data/")
+        path_output = os.path.join(
+            data_path, "weights/", str(from_survey), "not_normalised/"
+        )
 
         print(path_output)
         latest = tf.train.latest_checkpoint(path_output)
         net.load_weights(latest)
 
     # Define callbacks for VAE
-    callbacks = define_callbacks("vae",survey_name)
+    callbacks = define_callbacks("vae", survey_name)
 
     # Do the training for the VAE
-    hist_vae = train_network(net, epochs, training_data_vae, validation_data_vae, batch_size, callbacks, verbose)
+    hist_vae = train_network(
+        net,
+        epochs,
+        training_data_vae,
+        validation_data_vae,
+        batch_size,
+        callbacks,
+        verbose,
+    )
     print("\nTraining of VAE done.")
 
     # Set the decoder as non-trainable
     decoder.trainable = False
 
     # Compilation of the deblender
-    net.compile(optimizer=tf.optimizers.Adam(learning_rate=1e-4), 
-                loss=vae_loss,
-                metrics = ['mse', kl_metric],
-                experimental_run_tf_function=False,
-                )
+    net.compile(
+        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        loss=vae_loss,
+        metrics=["mse", kl_metric],
+        experimental_run_tf_function=False,
+    )
     print("\n\nDeblender model")
     net.summary()
 
     # Define callbacks for deblender
-    callbacks = define_callbacks("deblender",survey_name)
+    callbacks = define_callbacks("deblender", survey_name)
 
     # Do the training for the deblender
-    hist_deblender = train_network(net, epochs, training_data_deblender, validation_data_deblender, batch_size, callbacks, verbose)
+    hist_deblender = train_network(
+        net,
+        epochs,
+        training_data_deblender,
+        validation_data_deblender,
+        batch_size,
+        callbacks,
+        verbose,
+    )
     print("\nTraining of Deblender done.")
 
     return hist_vae, hist_deblender, net
