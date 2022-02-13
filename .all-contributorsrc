@@ -15,6 +15,15 @@
         "projectManagement",
         "ideas"
       ]
+    },
+    {
+      "login": "xuod",
+      "name": "Cyrille Doux",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9870063?v=4",
+      "profile": "http://xuod.github.io",
+      "contributions": [
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 7,
