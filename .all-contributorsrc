@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "BastienArcelin",
+      "name": "Bastien Arcelin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/43615932?v=4",
+      "profile": "https://github.com/BastienArcelin",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "debvader",
+  "projectOwner": "BastienArcelin",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
