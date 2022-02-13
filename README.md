@@ -61,7 +61,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/b-biswas"><img src="https://avatars.githubusercontent.com/u/44917825?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Biswajit Biswas</b></sub></a><br /><a href="#ideas-b-biswas" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/BastienArcelin/debvader/commits?author=b-biswas" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/roucelle"><img src="https://avatars.githubusercontent.com/u/17788009?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Cécile Roucelle</b></sub></a><br /><a href="#ideas-roucelle" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/aubourg"><img src="https://avatars.githubusercontent.com/u/4321664?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Eric Aubourg</b></sub></a><br /><a href="#ideas-aubourg" title="Ideas, Planning, & Feedback">🤔</a></td>
-    <td align="center"><a href="https://aboucaud.github.io"><img src="https://avatars.githubusercontent.com/u/3065310?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alexandre Boucaud</b></sub></a><br /><a href="#maintenance-aboucaud" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://aboucaud.github.io"><img src="https://avatars.githubusercontent.com/u/3065310?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alexandre Boucaud</b></sub></a><br /><a href="#maintenance-aboucaud" title="Maintenance">🚧</a> <a href="https://github.com/BastienArcelin/debvader/commits?author=aboucaud" title="Code">💻</a></td>
   </tr>
 </table>
 
