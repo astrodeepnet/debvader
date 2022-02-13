@@ -1,16 +1,15 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
-with open("README.md", "r") as readme_file:
+with open("README.md") as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    "numpy==1.17.4",
-    "tensorflow==2.1.0",
-    "tensorflow-probability==0.9.0",
+    "numpy",
+    "tensorflow",
+    "tensorflow-probability",
     "matplotlib",
-    "jupyter",
     "sep",
-    "scikit-image"
+    "scikit-image",
 ]
 
 setup(
@@ -25,11 +24,11 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/BastienArcelin/debvader",
     include_package_data=True,
-    packages=['debvader'],
+    packages=["debvader"],
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    package_data={'debvader': ['data/*']},
+    package_data={"debvader": ["data/*"]},
 )
