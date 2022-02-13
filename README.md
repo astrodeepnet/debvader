@@ -3,7 +3,7 @@
 [![Paper][arxiv-badge]][arxiv-paper]
 [![License][license-badge]][license-web]
 [![Tests][ci-badge]][ci-link]<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [ci-badge]: https://github.com/BastienArcelin/debvader/actions/workflows/python_tests.yml/badge.svg?style=flat
@@ -43,6 +43,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/roucelle"><img src="https://avatars.githubusercontent.com/u/17788009?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Cécile Roucelle</b></sub></a><br /><a href="#ideas-roucelle" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/aubourg"><img src="https://avatars.githubusercontent.com/u/4321664?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Eric Aubourg</b></sub></a><br /><a href="#ideas-aubourg" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://aboucaud.github.io"><img src="https://avatars.githubusercontent.com/u/3065310?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alexandre Boucaud</b></sub></a><br /><a href="#maintenance-aboucaud" title="Maintenance">🚧</a> <a href="https://github.com/BastienArcelin/debvader/commits?author=aboucaud" title="Code">💻</a> <a href="https://github.com/BastienArcelin/debvader/pulls?q=is%3Apr+reviewed-by%3Aaboucaud" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://github.com/aguinot"><img src="https://avatars.githubusercontent.com/u/39480528?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Axel Guinot</b></sub></a><br /><a href="#ideas-aguinot" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
