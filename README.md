@@ -1,6 +1,6 @@
 # DebVAder: Deblending galaxies with Variational Autoencoders
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![License][license-badge]][license-web]
@@ -59,6 +59,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/BastienArcelin"><img src="https://avatars.githubusercontent.com/u/43615932?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bastien Arcelin</b></sub></a><br /><a href="https://github.com/BastienArcelin/debvader/commits?author=BastienArcelin" title="Code">💻</a> <a href="#projectManagement-BastienArcelin" title="Project Management">📆</a> <a href="#ideas-BastienArcelin" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="http://xuod.github.io"><img src="https://avatars.githubusercontent.com/u/9870063?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Cyrille Doux</b></sub></a><br /><a href="#ideas-xuod" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/b-biswas"><img src="https://avatars.githubusercontent.com/u/44917825?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Biswajit Biswas</b></sub></a><br /><a href="#ideas-b-biswas" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/BastienArcelin/debvader/commits?author=b-biswas" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/roucelle"><img src="https://avatars.githubusercontent.com/u/17788009?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Cécile Roucelle</b></sub></a><br /><a href="#ideas-roucelle" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
