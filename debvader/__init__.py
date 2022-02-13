@@ -1,3 +1,1 @@
-import debvader
-
-from . import model, train
+from . import debvader, model, train  # noqa

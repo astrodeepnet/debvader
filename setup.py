@@ -1,6 +1,6 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
-with open("README.md", "r") as readme_file:
+with open("README.md") as readme_file:
     readme = readme_file.read()
 
 requirements = [
@@ -10,7 +10,7 @@ requirements = [
     "matplotlib",
     "jupyter",
     "sep",
-    "scikit-image"
+    "scikit-image",
 ]
 
 setup(
@@ -23,10 +23,10 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/BastienArcelin/debvader",
     include_package_data=True,
-    packages=['debvader'],
+    packages=["debvader"],
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3.6",
     ],
-    package_data={'debvader': ['data/*']},
+    package_data={"debvader": ["data/*"]},
 )
