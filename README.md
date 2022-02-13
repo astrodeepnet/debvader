@@ -56,7 +56,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://github.com/BastienArcelin"><img src="https://avatars.githubusercontent.com/u/43615932?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bastien Arcelin</b></sub></a><br /><a href="https://github.com/BastienArcelin/debvader/commits?author=BastienArcelin" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/BastienArcelin"><img src="https://avatars.githubusercontent.com/u/43615932?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bastien Arcelin</b></sub></a><br /><a href="https://github.com/BastienArcelin/debvader/commits?author=BastienArcelin" title="Code">💻</a> <a href="#projectManagement-BastienArcelin" title="Project Management">📆</a></td>
   </tr>
 </table>
 
