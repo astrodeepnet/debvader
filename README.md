@@ -1,6 +1,6 @@
 # DebVAder: Deblending galaxies with Variational Autoencoders
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![License][license-badge]][license-web]
@@ -57,6 +57,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tr>
     <td align="center"><a href="https://github.com/BastienArcelin"><img src="https://avatars.githubusercontent.com/u/43615932?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bastien Arcelin</b></sub></a><br /><a href="https://github.com/BastienArcelin/debvader/commits?author=BastienArcelin" title="Code">💻</a> <a href="#projectManagement-BastienArcelin" title="Project Management">📆</a></td>
+    <td align="center"><a href="http://xuod.github.io"><img src="https://avatars.githubusercontent.com/u/9870063?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Cyrille Doux</b></sub></a><br /><a href="#ideas-xuod" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
