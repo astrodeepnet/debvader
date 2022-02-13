@@ -1,7 +1,9 @@
-jupyter
+jax
+jaxlib
 matplotlib
 numpy
 pandas
+scikit-image
 sep
 tensorflow
 tensorflow-probability
