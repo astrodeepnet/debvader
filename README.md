@@ -31,8 +31,8 @@ It requires few packages to work:
 - `sep`
 
 It can then be pip installed with
-``` 
-pip install --index-url https://test.pypi.org/simple/ debvader 
+```
+pip install --index-url https://test.pypi.org/simple/ debvader
 ```
 
 ## Authors
