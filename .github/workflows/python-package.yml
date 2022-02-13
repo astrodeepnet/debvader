@@ -4,14 +4,9 @@
 name: Python package
 
 on:
-  push:
-    branches: 
-    - main
-    - dev-iterative-procedure
   pull_request:
-    branches: 
-    - main
-    - dev-iterative-procedure
+  push:
+    branches: [main]
 
 jobs:
   build:
