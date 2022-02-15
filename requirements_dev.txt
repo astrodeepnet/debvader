@@ -6,6 +6,7 @@ numpy
 pandas
 pip
 pre-commit
+scipy
 sep
 tensorflow
 tensorflow-probability

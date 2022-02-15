@@ -7,9 +7,12 @@ import scipy
 import sep
 import tensorflow as tf
 from scipy import optimize
-from skimage import metrics
 
 from debvader import model
+
+
+def mse(img1, img2):
+    return np.mean(np.square(img1 - img2))
 
 
 def extract_cutouts(
@@ -205,9 +208,7 @@ def position_optimization(
                 img: field image
                 net_output: predicted image if the galaxy
             """
-            return metrics.mean_squared_error(
-                img, scipy.ndimage.shift(net_output, shift=(x[0], x[1]))
-            )
+            return mse(img, scipy.ndimage.shift(net_output, shift=(x[0], x[1])))
 
         r_band_field = field_image[:, :, 2]
         r_band_perdiction = output_image_mean_padded[:, :, 2]
@@ -543,7 +544,7 @@ class DeblendField:
 
             center_img_start = int(self.cutout_size / 2) - 5
             center_img_end = int(self.cutout_size / 2) + 5
-            mse_center_img = metrics.mean_squared_error(
+            mse_center_img = mse(
                 cutout_images[
                     k, center_img_start:center_img_end, center_img_start:center_img_end
                 ],
@@ -634,7 +635,7 @@ class DeblendField:
         res_deblend = res_step
 
         new_residual_field = self.get_residual_field()
-        self.mse += [metrics.mean_squared_error(self.field_image, new_residual_field)]
+        self.mse += [mse(self.field_image, new_residual_field)]
         shifts_previous = []
         k = 1
         diff_mse = -1
@@ -657,9 +658,7 @@ class DeblendField:
 
             # compute the MSE after this iteration step
             new_residual_field = self.get_residual_field()
-            self.mse += [
-                metrics.mean_squared_error(prev_residual_field, new_residual_field)
-            ]
+            self.mse += [mse(prev_residual_field, new_residual_field)]
             # field_img_save, field_image, denoised_field, denoised_field_std, denoised_field_epistemic, cutout_images, output_images_mean, output_images_distribution, shifts, galaxy_distances_to_center, mse_step = deblending_step(net, field_img_init, detection_up_to_k, cutout_images = None, cutout_size = cutout_size, nb_of_bands = nb_of_bands, optimise_positions=optimise_positions, epistemic_uncertainty_estimation=epistemic_uncertainty_estimation, epistemic_criterion=epistemic_criterion, mse_criterion=mse_criterion, normalised=normalised)
             # field_img_init=field_img_save.copy()
 

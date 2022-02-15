@@ -3,7 +3,7 @@ jaxlib
 matplotlib
 numpy
 pandas
-scikit-image
+scipy
 sep
 tensorflow
 tensorflow-probability
