@@ -185,6 +185,7 @@ def load_deblender(
         latent_dim: size of the latent space
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
+        return_encoder_decoder_z: decides whether to return the encoder, decoder, and latent space or not
     """
     # Create the model
     net, encoder, decoder, z = create_model_vae(
