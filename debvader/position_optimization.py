@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+from scipy import optimize
 
 
 def position_optimization(
@@ -37,7 +38,7 @@ def position_optimization(
 
         r_band_field = field_image[:, :, 2]
         r_band_perdiction = output_image_mean_padded[:, :, 2]
-        opt = scipy.optimize.least_squares(
+        opt = optimize.least_squares(
             fun,
             (0.0, 0.0),
             args=(
