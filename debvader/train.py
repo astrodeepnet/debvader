@@ -5,6 +5,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 
 from debvader import model
+from debvader.metrics import vae_loss
 
 
 def train_network(
@@ -114,10 +115,6 @@ def train_deblender(
     )
     print("VAE model")
     net.summary()
-
-    # Define the loss as the log likelihood of the distribution on the image pixels
-    def vae_loss(x, x_decoded_mean):
-        return -x_decoded_mean.log_prob(x)
 
     # Custom metric to display the KL divergence during training
     def kl_metric(y_true, y_pred):
