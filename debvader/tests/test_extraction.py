@@ -1,6 +1,6 @@
 import numpy as np
 
-from debvader.object_extraction import extract_cutouts
+from debvader.extraction import extract_cutouts
 
 
 def test_cutouts_border():

@@ -3,13 +3,10 @@ import pandas as pd
 import scipy
 import tensorflow as tf
 
-from debvader.object_detection import detect_objects
-from debvader.object_extraction import extract_cutouts
-from debvader.position_optimization import position_optimization
-
-
-def mse(img1, img2):
-    return np.mean(np.square(img1 - img2))
+from debvader.detection import detect_objects
+from debvader.extraction import extract_cutouts
+from debvader.metrics import mse
+from debvader.optimization import position_optimization
 
 
 def deblend(net, images, normalised=False):

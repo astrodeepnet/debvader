@@ -1,4 +1,7 @@
+import os
+
 import numpy as np
+import pkg_resources
 import tensorflow as tf
 import tensorflow_probability as tfp
 from tensorflow.keras.layers import (
@@ -13,6 +16,8 @@ from tensorflow.keras.layers import (
     Reshape,
 )
 from tensorflow.keras.models import Model
+
+from debvader.metrics import vae_loss
 
 tfd = tfp.distributions
 
@@ -167,3 +172,50 @@ def create_model_vae(
     net = Model(inputs=x_input, outputs=decoder(z))
 
     return net, encoder, decoder, Model(inputs=x_input, outputs=z)
+
+
+def load_deblender(
+    survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder_z=False
+):
+    """
+    load weights trained for a particular dataset
+    parameters:
+        survey: string calling the particular dataset (choices are: "dc2")
+        input_shape: shape of input tensor
+        latent_dim: size of the latent space
+        filters: filters used for the convolutional layers
+        kernels: kernels used for the convolutional layers
+    """
+    # Create the model
+    net, encoder, decoder, z = create_model_vae(
+        input_shape,
+        latent_dim,
+        filters,
+        kernels,
+        conv_activation=None,
+        dense_activation=None,
+    )
+
+    # Set the decoder as non-trainable
+    decoder.trainable = False
+
+    # Compile the model
+    net.compile(
+        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        loss=vae_loss,
+        experimental_run_tf_function=False,
+    )
+
+    # Load the weights corresponding to the chosen survey
+    data_path = pkg_resources.resource_filename("debvader", "data/")
+    loading_path = os.path.join(data_path, "weights/", survey, "not_normalised/loss/")
+    print(loading_path)
+    latest = tf.train.latest_checkpoint(loading_path)
+    net.load_weights(latest)
+
+    if return_encoder_decoder_z:
+        return net, encoder, decoder, z
+    else:
+        return net
+
+    return net
