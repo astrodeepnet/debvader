@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import scipy
 import tensorflow as tf
-from object_detection import detect_objects, extract_cutouts
-from position_optimization import position_optimization
+
+from debvader.object_detection import detect_objects
+from debvader.object_extraction import extract_cutouts
+from debvader.position_optimization import position_optimization
 
 
 def mse(img1, img2):

@@ -1,4 +1,6 @@
-from scipy import optimize
+import numpy as np
+import scipy
+
 
 def position_optimization(
     field_image,
@@ -26,11 +28,16 @@ def position_optimization(
                 img: field image
                 net_output: predicted image if the galaxy
             """
-            return mse(img, scipy.ndimage.shift(net_output, shift=(x[0], x[1])))
+
+            mse = np.square(
+                img - scipy.ndimage.shift(net_output, shift=(x[0], x[1]))
+            ).mean()
+
+            return mse
 
         r_band_field = field_image[:, :, 2]
         r_band_perdiction = output_image_mean_padded[:, :, 2]
-        opt = optimize.least_squares(
+        opt = scipy.optimize.least_squares(
             fun,
             (0.0, 0.0),
             args=(
