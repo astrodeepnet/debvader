@@ -368,7 +368,6 @@ class DeblendField:
                     field_image[0],
                     output_images_mean_padded,
                     galaxy_distances_to_center[k],
-                    method="scipy-minimize",
                 )
 
             shifts.append(np.array([shift_x, shift_y]))
