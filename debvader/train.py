@@ -24,17 +24,28 @@ def train_network(
     """
 
     print("\nStart the training")
-    hist = net.fit(
-        training_data[0],
-        training_data[1],
-        epochs=epochs,
-        batch_size=batch_size,
-        verbose=verbose,
-        shuffle=True,
-        validation_data=(validation_data[0], validation_data[1]),
-        validation_steps=int(len(validation_data[0]) / batch_size),
-        callbacks=callbacks,
-    )
+    if isinstance(training_data, tf.keras.utils.Sequence):
+        hist = net.fit(
+            x=training_data,
+            epochs=epochs,
+            verbose=verbose,
+            shuffle=True,
+            validation_data=validation_data,
+            callbacks=callbacks,
+        )
+
+    else:
+        hist = net.fit(
+            x=training_data[0],
+            y=training_data[1],
+            epochs=epochs,
+            batch_size=batch_size,
+            verbose=verbose,
+            shuffle=True,
+            validation_data=(validation_data[0], validation_data[1]),
+            validation_steps=int(len(validation_data[0]) / batch_size),
+            callbacks=callbacks,
+        )
 
     return hist
 
@@ -86,7 +97,7 @@ def train_deblender(
     nb_of_bands=6,
     channel_last=True,
     batch_size=5,
-    verbose=2,
+    verbose=1,
 ):
     """
     function to train a network for a new survey
@@ -129,16 +140,17 @@ def train_deblender(
     )
 
     # Check if data format is correct
-    if not channel_last & (training_data_vae.shape[2] != nb_of_bands):
-        print(
-            "The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again."
-        )
-        raise ValueError
-    if channel_last & (training_data_vae.shape[-1] != nb_of_bands):
-        print(
-            "The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again."
-        )
-        raise ValueError
+    if not isinstance(training_data_vae, tf.keras.utils.Sequence):
+        if not channel_last & (training_data_vae.shape[2] != nb_of_bands):
+            print(
+                "The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again."
+            )
+            raise ValueError
+        if channel_last & (training_data_vae.shape[-1] != nb_of_bands):
+            print(
+                "The number of bands in the data does not correspond to the number of filters in the network. Correct this before starting again."
+            )
+            raise ValueError
 
     # Start from the weights of an already trained network (recommended if possible)
     if from_survey is not None:
