@@ -61,6 +61,7 @@ class DeblendField:
         self.nb_of_deblended_galaxies = []
         self.res_deblend = None
         self.mse = []
+        self.optimize_positions = False
 
     def get_residual_field(self, res_deblend=None):
         """
@@ -82,37 +83,61 @@ class DeblendField:
         if res_deblend is not None:
             for isolated_galaxy_row in res_deblend:
 
-                # First create padded images of the stamps at the size of the field to allow for a simple subtraction.
-
                 # TODO: may be use some inbuild padding function?
-                output_images_mean_padded = np.zeros(
-                    (1, self.field_size, self.field_size, self.nb_of_bands)
-                )
-                pos_offset = int((self.field_size - self.cutout_size) / 2)
-
-                output_images_mean_padded[
-                    :,
-                    pos_offset : self.cutout_size + pos_offset,
-                    pos_offset : self.cutout_size + pos_offset,
-                    :,
-                ] = isolated_galaxy_row["output_images_mean"]
 
                 # subtract the image of the currently galaxy after positioning it correctly
                 # TODO: try to avoid using scipy.ndimage.shift here, it is super slow. Diectly subtract at correct index instead of creating a padding?
-                x_pos = (
-                    isolated_galaxy_row["galaxy_distances_to_center_x"]
-                    + isolated_galaxy_row["shifts"][0]
-                )
-                y_pos = (
-                    isolated_galaxy_row["galaxy_distances_to_center_y"]
-                    + isolated_galaxy_row["shifts"][1]
-                )
 
-                for band in range(self.nb_of_bands):
-                    deblended_image[0, :, :, band] -= scipy.ndimage.shift(
-                        output_images_mean_padded[0, :, :, band], shift=(x_pos, y_pos)
+                pos_offset = int((self.field_size - self.cutout_size) / 2)
+
+                if self.optimize_positions:
+
+                    # First create padded images of the stamps at the size of the field to allow for a simple subtraction.
+
+                    output_images_mean_padded = np.zeros(
+                        (1, self.field_size, self.field_size, self.nb_of_bands)
                     )
 
+                    output_images_mean_padded[
+                        :,
+                        pos_offset : self.cutout_size + pos_offset,
+                        pos_offset : self.cutout_size + pos_offset,
+                        :,
+                    ] = isolated_galaxy_row["output_images_mean"]
+
+                    x_pos = (
+                        isolated_galaxy_row["galaxy_distances_to_center_x"]
+                        + isolated_galaxy_row["shifts"][0]
+                    )
+                    y_pos = (
+                        isolated_galaxy_row["galaxy_distances_to_center_y"]
+                        + isolated_galaxy_row["shifts"][1]
+                    )
+
+                    for band in range(self.nb_of_bands):
+                        deblended_image[0, :, :, band] -= scipy.ndimage.shift(
+                            output_images_mean_padded[0, :, :, band],
+                            shift=(x_pos, y_pos),
+                        )
+                else:
+                    x_start = int(
+                        round(
+                            isolated_galaxy_row["galaxy_distances_to_center_x"]
+                            + pos_offset
+                        )
+                    )
+                    y_start = int(
+                        round(
+                            isolated_galaxy_row["galaxy_distances_to_center_y"]
+                            + pos_offset
+                        )
+                    )
+
+                    deblended_image[
+                        0,
+                        x_start : self.cutout_size + x_start,
+                        y_start : self.cutout_size + y_start,
+                    ] -= isolated_galaxy_row["output_images_mean"]
         return deblended_image
 
     def get_predicted_field(self, res_deblend=None):
@@ -147,58 +172,89 @@ class DeblendField:
 
                 # First create padded images of the stamps at the size of the field to allow for a simple subtraction.
 
-                pad_start = int((self.field_size - self.cutout_size) / 2)
-                pad_end = self.cutout_size + int(
-                    (self.field_size - self.cutout_size) / 2
-                )
+                if self.optimize_positions:
 
-                output_images_mean_padded = np.zeros(
-                    (self.field_size, self.field_size, self.nb_of_bands)
-                )
-                output_images_mean_padded[
-                    pad_start:pad_end, pad_start:pad_end, :
-                ] = output_images_mean
-
-                # Create the corresponding standard deviation image (aleatoric uncertainty).
-                output_images_stddev_padded = np.zeros(
-                    (self.field_size, self.field_size, self.nb_of_bands)
-                )
-                output_images_stddev_padded[
-                    pad_start:pad_end, pad_start:pad_end, :
-                ] = output_images_stddev
-
-                x_pos = (
-                    isolated_galaxy_row["galaxy_distances_to_center_x"]
-                    + isolated_galaxy_row["shifts"][0]
-                )
-                y_pos = (
-                    isolated_galaxy_row["galaxy_distances_to_center_y"]
-                    + isolated_galaxy_row["shifts"][1]
-                )
-
-                for band in range(
-                    self.nb_of_bands
-                ):  # scipy.ndimage.shift is slow so looping over bands is faster
-
-                    denoised_field[:, :, band] += scipy.ndimage.shift(
-                        output_images_mean_padded[:, :, band], shift=(x_pos, y_pos)
-                    )
-                    denoised_field_std[:, :, band] += scipy.ndimage.shift(
-                        output_images_stddev_padded[:, :, band], shift=(x_pos, y_pos)
+                    pad_start = int((self.field_size - self.cutout_size) / 2)
+                    pad_end = self.cutout_size + int(
+                        (self.field_size - self.cutout_size) / 2
                     )
 
-                    output_images_epistemic_padded = np.zeros(
+                    output_images_mean_padded = np.zeros(
                         (self.field_size, self.field_size, self.nb_of_bands)
                     )
-                    if self.epistemic_uncertainty_estimation:
-                        # Create the corresponding epistemic uncertainty image (aleatoric uncertainty).
-                        output_images_epistemic_padded[
-                            pad_start:pad_end, pad_start:pad_end, :
-                        ] = np.array(epistemic_uncertainty)
-                        denoised_field_epistemic[:, :, band] += scipy.ndimage.shift(
-                            output_images_epistemic_padded[:, :, band],
+                    output_images_mean_padded[
+                        pad_start:pad_end, pad_start:pad_end, :
+                    ] = output_images_mean
+
+                    # Create the corresponding standard deviation image (aleatoric uncertainty).
+                    output_images_stddev_padded = np.zeros(
+                        (self.field_size, self.field_size, self.nb_of_bands)
+                    )
+                    output_images_stddev_padded[
+                        pad_start:pad_end, pad_start:pad_end, :
+                    ] = output_images_stddev
+
+                    x_pos = (
+                        isolated_galaxy_row["galaxy_distances_to_center_x"]
+                        + isolated_galaxy_row["shifts"][0]
+                    )
+                    y_pos = (
+                        isolated_galaxy_row["galaxy_distances_to_center_y"]
+                        + isolated_galaxy_row["shifts"][1]
+                    )
+
+                    for band in range(
+                        self.nb_of_bands
+                    ):  # scipy.ndimage.shift is slow so looping over bands is faster
+
+                        denoised_field[:, :, band] += scipy.ndimage.shift(
+                            output_images_mean_padded[:, :, band], shift=(x_pos, y_pos)
+                        )
+                        denoised_field_std[:, :, band] += scipy.ndimage.shift(
+                            output_images_stddev_padded[:, :, band],
                             shift=(x_pos, y_pos),
                         )
+
+                        output_images_epistemic_padded = np.zeros(
+                            (self.field_size, self.field_size, self.nb_of_bands)
+                        )
+                        if self.epistemic_uncertainty_estimation:
+                            # Create the corresponding epistemic uncertainty image (aleatoric uncertainty).
+                            output_images_epistemic_padded[
+                                pad_start:pad_end, pad_start:pad_end, :
+                            ] = np.array(epistemic_uncertainty)
+                            denoised_field_epistemic[:, :, band] += scipy.ndimage.shift(
+                                output_images_epistemic_padded[:, :, band],
+                                shift=(x_pos, y_pos),
+                            )
+
+                else:
+                    pos_offset = int((self.field_size - self.cutout_size) / 2)
+                    x_start = int(
+                        round(
+                            isolated_galaxy_row["galaxy_distances_to_center_x"]
+                            + pos_offset
+                        )
+                    )
+                    y_start = int(
+                        round(
+                            isolated_galaxy_row["galaxy_distances_to_center_y"]
+                            + pos_offset
+                        )
+                    )
+
+                    denoised_field[
+                        x_start : x_start + self.cutout_size,
+                        y_start : y_start + self.cutout_size,
+                    ] += output_images_mean
+                    denoised_field_std[
+                        x_start : x_start + self.cutout_size,
+                        y_start : y_start + self.cutout_size,
+                    ] += output_images_stddev
+                    denoised_field_epistemic[
+                        x_start : x_start + self.cutout_size,
+                        y_start : y_start + self.cutout_size,
+                    ] += epistemic_uncertainty
 
         predicted_field = {}
         predicted_field["predicted_mean_field"] = denoised_field
@@ -259,6 +315,7 @@ class DeblendField:
             self.res_deblended: np.recarray containing the following for each detected galaxy -
                 cutout_images, output_images_mean, output_images_stddev, shifts, list_idx, galaxy_distances_to_center_x, galaxy_distances_to_center_y
         """
+        self.optimize_positions = False
 
         res_deblend = dict()
         res_deblend["cutout_images"] = None
