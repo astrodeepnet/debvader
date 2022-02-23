@@ -50,14 +50,18 @@ def train_network(
     return hist
 
 
-def define_callbacks(vae_or_deblender, survey_name):
+def define_callbacks(vae_or_deblender, survey_name, weights_save_path=None):
     """
     Define callbacks for a network to train
     parameters:
         vae_or_deblender: training a VAE or a deblender. Used for the saving path.
         survey_name: name of the survey from which the data comes. Used for the saving path.
+        weights_save_path: path at which weights are to be saved.path at which weights are to be saved. By default, it saves weights in the data folder.
     """
-    data_path = pkg_resources.resource_filename("debvader", "data/")
+    if weights_save_path is None:
+        data_path = pkg_resources.resource_filename("debvader", "data/")
+    else:
+        data_path = weights_save_path
 
     saving_path = os.path.join(
         data_path, "weights/", str(survey_name), str(vae_or_deblender), ""
@@ -98,6 +102,7 @@ def train_deblender(
     channel_last=True,
     batch_size=5,
     verbose=1,
+    weights_save_path=None,
 ):
     """
     function to train a network for a new survey
@@ -109,6 +114,7 @@ def train_deblender(
     batch_size: size of batch for training
     callbacks: callbacks wanted for the training
     verbose: display of training (1:yes, 2: no)
+    weights_save_path: path at which weights are to be saved. By default, it saves weights in the data folder.
     """
     # Generate a network for training. The architecture is fixed.
     input_shape = (59, 59, nb_of_bands)
@@ -165,7 +171,7 @@ def train_deblender(
         net.load_weights(latest)
 
     # Define callbacks for VAE
-    callbacks = define_callbacks("vae", survey_name)
+    callbacks = define_callbacks("vae", survey_name, weights_save_path)
 
     # Do the training for the VAE
     hist_vae = train_network(
@@ -193,7 +199,9 @@ def train_deblender(
     net.summary()
 
     # Define callbacks for deblender
-    callbacks = define_callbacks("deblender", survey_name)
+    callbacks = define_callbacks(
+        "deblender", survey_name, weights_save_path=weights_save_path
+    )
 
     # Do the training for the deblender
     hist_deblender = train_network(
