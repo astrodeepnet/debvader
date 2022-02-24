@@ -29,7 +29,7 @@ def extract_cutouts(
             y_start = -int(cutout_size / 2) + int(y_shift) + int(field_size / 2)
             y_end = int(cutout_size / 2) + int(y_shift) + int(field_size / 2) + 1
 
-            cutout_images[i] = field_image[0, x_start:x_end, y_start:y_end]
+            cutout_images[i] = field_image[x_start:x_end, y_start:y_end]
             list_idx.append(i)
 
         except ValueError:

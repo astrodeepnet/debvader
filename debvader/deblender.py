@@ -80,6 +80,7 @@ class DeblendField:
             res_deblend = self.res_deblend
 
         deblended_image = self.field_image.copy()
+
         if res_deblend is not None:
             for isolated_galaxy_row in res_deblend:
 
@@ -95,11 +96,10 @@ class DeblendField:
                     # First create padded images of the stamps at the size of the field to allow for a simple subtraction.
 
                     output_images_mean_padded = np.zeros(
-                        (1, self.field_size, self.field_size, self.nb_of_bands)
+                        (self.field_size, self.field_size, self.nb_of_bands)
                     )
 
                     output_images_mean_padded[
-                        :,
                         pos_offset : self.cutout_size + pos_offset,
                         pos_offset : self.cutout_size + pos_offset,
                         :,
@@ -115,7 +115,7 @@ class DeblendField:
                     )
 
                     for band in range(self.nb_of_bands):
-                        deblended_image[0, :, :, band] -= scipy.ndimage.shift(
+                        deblended_image[:, :, band] -= scipy.ndimage.shift(
                             output_images_mean_padded[0, :, :, band],
                             shift=(x_pos, y_pos),
                         )
@@ -132,9 +132,7 @@ class DeblendField:
                             + pos_offset
                         )
                     )
-
                     deblended_image[
-                        0,
                         x_start : self.cutout_size + x_start,
                         y_start : self.cutout_size + y_start,
                     ] -= isolated_galaxy_row["output_images_mean"]
@@ -329,8 +327,6 @@ class DeblendField:
         ):  # TODO: if the user passes a differnet field image instead of self.field it will mess up the self.get_residual (and others) function
             field_image = self.field_image.copy()
 
-        field_size = field_image.shape[1]
-
         # Deblend the cutouts around the detected galaxies. If needed, create the cutouts.
         if isinstance(cutout_images, np.ndarray):
             output_images_mean, output_images_distribution = deblend(
@@ -340,7 +336,7 @@ class DeblendField:
         else:
             cutout_images, list_idx = extract_cutouts(
                 field_image,
-                field_size,
+                self.field_size,
                 galaxy_distances_to_center,
                 self.cutout_size,
                 self.nb_of_bands,
@@ -422,7 +418,7 @@ class DeblendField:
                     :,
                 ] = output_images_mean[i]
                 shift_x, shift_y = position_optimization(
-                    field_image[0],
+                    field_image,
                     output_images_mean_padded,
                     galaxy_distances_to_center[k],
                 )
