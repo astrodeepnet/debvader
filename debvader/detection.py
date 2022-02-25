@@ -11,8 +11,7 @@ def detect_objects(field_image):
     field_size = field_image.shape[1]
     galaxy_distances_to_center = []
 
-    r_band_data = field_image[:, :, 2].copy()
-
+    r_band_data = field_image[0, :, :, 2].copy()
     bkg = sep.Background(r_band_data)
 
     r_band_foreground = r_band_data - bkg
