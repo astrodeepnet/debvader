@@ -175,7 +175,13 @@ def create_model_vae(
 
 
 def load_deblender(
-    survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder_z=False
+    input_shape,
+    latent_dim,
+    filters,
+    kernels,
+    return_encoder_decoder_z=False,
+    survey="dc2",
+    external_path_to_folder=None,
 ):
     """
     load weights trained for a particular dataset
@@ -186,6 +192,8 @@ def load_deblender(
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
         return_encoder_decoder_z: decides whether to return the encoder, decoder, and latent space or not
+        external_path_to_folder: path to weights if it is sored outside the repository.
+            if a path is passed, the survey parameter will be ignored.
     """
     # Create the model
     net, encoder, decoder, z = create_model_vae(
@@ -207,12 +215,18 @@ def load_deblender(
         experimental_run_tf_function=False,
     )
 
-    # Load the weights corresponding to the chosen survey
-    data_path = pkg_resources.resource_filename("debvader", "data/")
-    loading_path = os.path.join(data_path, "weights", survey, "not_normalised", "loss")
-    print(loading_path)
-    latest = tf.train.latest_checkpoint(loading_path)
-    net.load_weights(latest)
+    if external_path_to_folder is None:
+        # Load the weights corresponding to the chosen survey
+        data_path = pkg_resources.resource_filename("debvader", "data/")
+        loading_path = os.path.join(
+            data_path, "weights", survey, "not_normalised", "loss"
+        )
+        print(loading_path)
+        latest = tf.train.latest_checkpoint(loading_path)
+        net.load_weights(latest)
+    else:
+        latest = tf.train.latest_checkpoint(external_path_to_folder)
+        net.load_weights(latest)
 
     if return_encoder_decoder_z:
         return net, encoder, decoder, z
