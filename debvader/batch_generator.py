@@ -37,7 +37,7 @@ class COSMOSsequence(Sequence):
         if normalization is not None:
             if isinstance(normalization, Normalization):
                 raise ValueError(
-                    "The parameter `normalization` shoudl be an instance of Debvader.normalize.Normalization"
+                    "The parameter `normalization` should be an instance of Debvader.normalize.Normalization"
                 )
 
         self.normalization = normalization
