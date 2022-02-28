@@ -54,11 +54,10 @@ class DeblendField:
         self.cutout_size = cutout_size
         self.nb_of_bands = nb_of_bands
         self.epistemic_uncertainty_estimation = epistemic_uncertainty_estimation
-        if normalizer is not None:
-            if not isinstance(normalizer, Normalizer):
-                raise ValueError(
-                    "The parameter `normalizer` shoudl be an instance of Debvader.normalize.Normalizer"
-                )
+        if (normalizer is not None) and (not isinstance(normalizer, Normalizer)):
+            raise ValueError(
+                "The parameter `normalizer` shoudl be an instance of Debvader.normalize.Normalizer"
+            )
         self.normalizer = normalizer
         self.nb_of_detected_objects = []
         self.nb_of_deblended_galaxies = []

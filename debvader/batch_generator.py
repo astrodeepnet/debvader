@@ -34,11 +34,12 @@ class COSMOSsequence(Sequence):
         self.y_col_name = y_col_name
         self.batch_size = batch_size
         self.num_iterations_per_epoch = num_iterations_per_epoch
-        if normalization is not None:
-            if not isinstance(normalization, Normalization):
-                raise ValueError(
-                    "The parameter `normalization` should be an instance of Debvader.normalize.Normalization"
-                )
+        if (normalization is not None) and (
+            not isinstance(normalization, Normalization)
+        ):
+            raise ValueError(
+                "The parameter `normalization` should be an instance of Debvader.normalize.Normalization"
+            )
 
         self.normalization = normalization
         self.channel_last = channel_last
