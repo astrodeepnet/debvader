@@ -1,32 +1,41 @@
 import numpy as np
 
 
-def linear_normalization_cosmos(x, direction="normalize"):
+def linear_normalization_cosmos(images):
     """
     linear normalization used for cosmos dataset
 
     parameters:
-        x: numpy array to be normalzied.
-        derection: options - "normalize", "denormalize"
+        images: numpy array to be normalzied.
     """
-    if direction not in ["normalize", "denormalize"]:
-        raise ValueError(
-            'the possible options for direction is either "normalize" or "denormalize"'
-        )
-
-    if direction == "normalize":
-        return x / 80000
-    else:
-        return x * 80000
+    return images / 80000
 
 
-def non_linear_normalization_cosmos(images, direction="normalize"):
-    if direction not in ["normalize", "denormalize"]:
-        raise ValueError(
-            'the possible options for direction is either "normalize" or "denormalize"'
-        )
-    if direction == "normalize":
-        # Normalize input images
-        images_normed = np.tanh(np.arcsinh(images))
-    else:
-        images = np.sinh(np.arctanh(images_normed))
+def linear_denormalization_cosmos(images):
+    """
+    linear denormalization used for cosmos dataset
+
+    parameters:
+        images: numpy array to be denormalzied.
+    """
+    return images * 80000
+
+
+def non_linear_normalization_cosmos(images):
+    """
+    non-linear normalization used for cosmos dataset
+
+    parameters:
+        images: numpy array to be normalzied.
+    """
+    return np.tanh(np.arcsinh(images))
+
+
+def non_linear_denormalization_cosmos(images):
+    """
+    non-linear denormalization used for cosmos dataset
+
+    parameters:
+        images: numpy array to be denormalzied.
+    """
+    return np.sinh(np.arctanh(images))
