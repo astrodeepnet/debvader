@@ -36,7 +36,7 @@ class COSMOSsequence(Sequence):
         self.num_iterations_per_epoch = num_iterations_per_epoch
         if (normalizer is not None) and (not isinstance(normalizer, Normalizer)):
             raise ValueError(
-                "The parameter `normalizer` should be an instance of Debvader.normalize.Normalizer"
+                "The parameter `normalizer` should be an instance of debvader.normalize.Normalizer"
             )
 
         self.normalizer = normalizer
