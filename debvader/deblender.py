@@ -559,7 +559,7 @@ class DeblendField:
         """
         One step of the iterative procedure called within iterative_procedure.
 
-        paramters:
+        parameters:
             field_image: image of the field to deblend
             galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
             cutout_images: stamps centered on the galaxies to deblend
