@@ -14,7 +14,7 @@ class COSMOSsequence(Sequence):
         y_col_name,
         batch_size,
         num_iterations_per_epoch,
-        normalizer,
+        normalizer=None,
         channel_last=False,
     ):
         """
@@ -26,7 +26,7 @@ class COSMOSsequence(Sequence):
         y_col_name: column name of data to be fed as target to the network
         batch_size: sample sixe for each batch
         num_iterations_per_epoch: number of samples (of size = batch_size) to be drawn from the sample
-        normalizer: object of Debvader.normalize.Normalize, used to perform norm and denorm operations
+        normalizer: object of Debvader.normalize.Normalize, used to perform norm and denorm operations (default is None).
         channel_last: boolean to indicate if the the clast channel corresponds to differnet bands of the input data.
         """
         self.list_of_samples = list_of_samples
@@ -57,8 +57,9 @@ class COSMOSsequence(Sequence):
         x = np.array(x.tolist())
         y = np.array(y.tolist())
 
-        x = self.normalizer.forward(x)
-        y = self.normalizer.forward(y)
+        if self.normalizer is not None:
+            x = self.normalizer.forward(x)
+            y = self.normalizer.forward(y)
 
         #  flip : flipping the image array
         # if not self.channel_last:
