@@ -6,10 +6,11 @@ import tensorflow as tf
 from debvader.detection import detect_objects
 from debvader.extraction import extract_cutouts
 from debvader.metrics import mse
+from debvader.normalize import Normalization
 from debvader.optimization import position_optimization
 
 
-def deblend(net, images, normalization_func=None):
+def deblend(net, images, normalization=None):
     """
     Deblend the image using the network
     parameters:
@@ -17,8 +18,8 @@ def deblend(net, images, normalization_func=None):
         images: array of images. It can contain only one image
         normalised: boolean to indicate if images need to be normalised
     """
-    if normalization_func is not None:
-        images = normalization_func(images)
+    if normalization is not None:
+        images = normalization.forward(images)
 
     return net(tf.cast(images, tf.float32)).mean().numpy(), net(
         tf.cast(images, tf.float32)
@@ -33,8 +34,7 @@ class DeblendField:
         cutout_size=59,
         nb_of_bands=6,
         epistemic_uncertainty_estimation=False,
-        normalization_func=None,
-        denormalization_func=None,
+        normalization=None,
     ):
         """
         to initialize
@@ -45,7 +45,7 @@ class DeblendField:
             cutout_size: size of the stamps
             nb_of_bands: number of filters in the image
             epistemic_uncertainty_estimation: boolean to indication if expestemic uncertainity extimation is to be done.
-            normalization_func: function to be used for normalization
+            normalization: object of Debvader.normalize.Normalize, used to perform norm and denorm operations
         """
 
         self.net = net
@@ -54,10 +54,12 @@ class DeblendField:
         self.cutout_size = cutout_size
         self.nb_of_bands = nb_of_bands
         self.epistemic_uncertainty_estimation = epistemic_uncertainty_estimation
-        if (normalization_func is None) ^ (denormalization_func is None):
-            raise ValueError("Both norm and denorm functions must be specified")
-        self.normalization_func = normalization_func
-        self.denormalization_func = denormalization_func
+        if normalization is not None:
+            if isinstance(normalization, Normalization):
+                raise ValueError(
+                    "The parameter `normalization` shoudl be an instance of Debvader.normalize.Normalization"
+                )
+        self.normalization = normalization
         self.nb_of_detected_objects = []
         self.nb_of_deblended_galaxies = []
         self.res_deblend = None
@@ -331,7 +333,7 @@ class DeblendField:
         # Deblend the cutouts around the detected galaxies. If needed, create the cutouts.
         if isinstance(cutout_images, np.ndarray):
             output_images_mean, output_images_distribution = deblend(
-                self.net, cutout_images, normalization_func=self.normalization_func
+                self.net, cutout_images, normalization=self.normalization
             )
             list_idx = list(range(0, len(output_images_mean)))
         else:
@@ -345,7 +347,7 @@ class DeblendField:
             output_images_mean, output_images_distribution = deblend(
                 self.net,
                 cutout_images[list_idx],
-                normalization_func=self.normalization_func,
+                normalization=self.normalization,
             )
         if list_idx == []:
             print("No galaxy deblended. End of the iterative procedure.")
@@ -381,7 +383,7 @@ class DeblendField:
                         deblend(
                             self.net,
                             np.array([cutout_images[k]] * 100),
-                            normalization_func=self.normalization_func,
+                            normalization=self.normalization,
                         )[0],
                         axis=0,
                     )
@@ -439,7 +441,7 @@ class DeblendField:
         self.nb_of_deblended_galaxies += [len(list_idx)]
 
         res_deblend["cutout_images"] = list(cutout_images[list_idx])
-        if self.normalization_func is None:
+        if self.normalization is None:
             res_deblend["output_images_mean"] = list(output_images_mean)
             res_deblend["output_images_stddev"] = list(
                 output_images_distribution.stddev().numpy()
@@ -447,10 +449,10 @@ class DeblendField:
 
         else:
             res_deblend["output_images_mean"] = list(
-                self.denormalization_func(output_images_mean)
+                self.normalization.inverse(output_images_mean)
             )
             res_deblend["output_images_stddev"] = list(
-                self.denormalization_func(output_images_distribution.stddev().numpy())
+                self.normalization.inverse(output_images_distribution.stddev().numpy())
             )
         res_deblend["shifts"] = shifts
         res_deblend["list_idx"] = list_idx

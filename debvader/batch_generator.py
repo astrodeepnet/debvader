@@ -3,6 +3,8 @@ from random import choice
 import numpy as np
 from tensorflow.keras.utils import Sequence
 
+from debvader.normalize import Normalization
+
 
 class COSMOSsequence(Sequence):
     def __init__(
@@ -12,7 +14,7 @@ class COSMOSsequence(Sequence):
         y_col_name,
         batch_size,
         num_iterations_per_epoch,
-        normalization_func,
+        normalization,
         channel_last=False,
     ):
         """
@@ -24,7 +26,7 @@ class COSMOSsequence(Sequence):
         y_col_name: column name of data to be fed as target to the network
         batch_size: sample sixe for each batch
         num_iterations_per_epoch: number of samples (of size = batch_size) to be drawn from the sample
-        normalization_func: function to be used for normalization
+        normalization: object of Debvader.normalize.Normalize, used to perform norm and denorm operations
         channel_last: boolean to indicate if the the clast channel corresponds to differnet bands of the input data.
         """
         self.list_of_samples = list_of_samples
@@ -32,13 +34,19 @@ class COSMOSsequence(Sequence):
         self.y_col_name = y_col_name
         self.batch_size = batch_size
         self.num_iterations_per_epoch = num_iterations_per_epoch
-        self.normalization_func = normalization_func
+        if normalization is not None:
+            if isinstance(normalization, Normalization):
+                raise ValueError(
+                    "The parameter `normalization` shoudl be an instance of Debvader.normalize.Normalization"
+                )
+
+        self.normalization = normalization
         self.channel_last = channel_last
 
     def __len__(self):
         return self.num_iterations_per_epoch
 
-    def __getitem__(self, idx):  # WHY idx??
+    def __getitem__(self, idx):
 
         current_loop_file_name = choice(self.list_of_samples)
         current_sample = np.load(current_loop_file_name, allow_pickle=True)
@@ -50,8 +58,8 @@ class COSMOSsequence(Sequence):
         x = np.array(x.tolist())
         y = np.array(y.tolist())
 
-        x = self.normalization_func(x)
-        y = self.normalization_func(y)
+        x = self.normalization.forward(x)
+        y = self.normalization.forward(y)
 
         #  flip : flipping the image array
         # if not self.channel_last:

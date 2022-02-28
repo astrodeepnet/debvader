@@ -1,41 +1,61 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 
 
-def linear_normalization_cosmos(images):
+class Normalization(ABC):
+    @abstractmethod
+    def forward(self, images):
+        pass
+
+    @abstractmethod
+    def inverse(self, images):
+        pass
+
+
+class LinearNormCosmos(Normalization):
     """
-    linear normalization used for cosmos dataset
-
-    parameters:
-        images: numpy array to be normalzied.
+    Performs linear normalization/denormalization on Cosmos data
     """
-    return images / 80000
+
+    def forward(self, images):
+        """
+        function to perform linear normalization of the data
+
+        parameters:
+            images: numpy array to be denormalzied.
+        """
+        return images / 80000
+
+    def inverse(self, images):
+        """
+        function to perform linear denormalization of the data
+
+        parameters:
+            images: numpy array to be denormalzied.
+        """
+        return images * 80000
 
 
-def linear_denormalization_cosmos(images):
+class NonLinearNormCosmos(Normalization):
     """
-    linear denormalization used for cosmos dataset
-
-    parameters:
-        images: numpy array to be denormalzied.
+    Performs non-linear normalization/denormalization on Cosmos data
     """
-    return images * 80000
 
+    def forward(self, images):
+        """
+        non-linear normalization used for cosmos dataset
 
-def non_linear_normalization_cosmos(images):
-    """
-    non-linear normalization used for cosmos dataset
+        parameters:
+            images: numpy array to be normalzied.
+        """
+        return np.tanh(np.arcsinh(images))
 
-    parameters:
-        images: numpy array to be normalzied.
-    """
-    return np.tanh(np.arcsinh(images))
+    def inverse(self, images):
+        """
+        non-linear denormalization used for cosmos dataset
 
-
-def non_linear_denormalization_cosmos(images):
-    """
-    non-linear denormalization used for cosmos dataset
-
-    parameters:
-        images: numpy array to be denormalzied.
-    """
-    return np.sinh(np.arctanh(images))
+        parameters:
+            images: numpy array to be denormalzied.
+        """
+        return np.sinh(np.arctanh(images))
