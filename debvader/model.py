@@ -192,9 +192,9 @@ def load_deblender(
         kernels: kernels used for the convolutional layers
         return_encoder_decoder_z: decides whether to return the encoder, decoder, and latent space or not
         survey: string calling the particular dataset (currently only "dc2" is supported)
-        loading_path: path to weights if it is sored outside the repository.
-            if a path is passed, the survey parameter will be ignored.
-            if left as none, weights from the default survey ("dc2") will be loaded.
+        loading_path: optional path to weights (default is None)
+            if a path is provided, the `survey` argument will be ignored.
+            if left as None, internal weights for the specified `survey` argument will be loaded.
     """
     # Create the model
     net, encoder, decoder, z = create_model_vae(
