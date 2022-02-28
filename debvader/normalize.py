@@ -3,17 +3,23 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class Normalization(ABC):
+class Normalizer(ABC):
     @abstractmethod
     def forward(self, images):
+        """
+        function to perform normalization of the data
+        """
         pass
 
     @abstractmethod
-    def inverse(self, images):
+    def backward(self, images):
+        """
+        function to perform linear denormalization of the data
+        """
         pass
 
 
-class LinearNormCosmos(Normalization):
+class LinearNormCosmos(Normalizer):
     """
     Performs linear normalization/denormalization on Cosmos data
     """
@@ -27,7 +33,7 @@ class LinearNormCosmos(Normalization):
         """
         return images / 80000
 
-    def inverse(self, images):
+    def backward(self, images):
         """
         function to perform linear denormalization of the data
 
@@ -37,7 +43,7 @@ class LinearNormCosmos(Normalization):
         return images * 80000
 
 
-class NonLinearNormCosmos(Normalization):
+class NonLinearNormCosmos(Normalizer):
     """
     Performs non-linear normalization/denormalization on Cosmos data
     """
@@ -51,7 +57,7 @@ class NonLinearNormCosmos(Normalization):
         """
         return np.tanh(np.arcsinh(images))
 
-    def inverse(self, images):
+    def backward(self, images):
         """
         non-linear denormalization used for cosmos dataset
 
