@@ -45,7 +45,7 @@ class DeblendField:
             cutout_size: size of the stamps
             nb_of_bands: number of filters in the image
             epistemic_uncertainty_estimation: boolean to indication if expestemic uncertainity extimation is to be done.
-            normalizer: object of Debvader.normalize.Normalize, used to perform norm and denorm operations
+            normalizer: object of debvader.normalize.Normalize, used to perform norm and denorm operations
         """
 
         self.net = net
@@ -56,7 +56,7 @@ class DeblendField:
         self.epistemic_uncertainty_estimation = epistemic_uncertainty_estimation
         if (normalizer is not None) and (not isinstance(normalizer, Normalizer)):
             raise ValueError(
-                "The parameter `normalizer` shoudl be an instance of Debvader.normalize.Normalizer"
+                "The parameter `normalizer` shoudl be an instance of debvader.normalize.Normalizer"
             )
         self.normalizer = normalizer
         self.nb_of_detected_objects = []
