@@ -6,10 +6,11 @@ import tensorflow as tf
 from debvader.detection import detect_objects
 from debvader.extraction import extract_cutouts
 from debvader.metrics import mse
+from debvader.normalize import Normalizer
 from debvader.optimization import position_optimization
 
 
-def deblend(net, images, normalization_func=None):
+def deblend(net, images, normalizer=None):
     """
     Deblend the image using the network
     parameters:
@@ -17,8 +18,8 @@ def deblend(net, images, normalization_func=None):
         images: array of images. It can contain only one image
         normalised: boolean to indicate if images need to be normalised
     """
-    if normalization_func is not None:
-        images = normalization_func(images)
+    if normalizer is not None:
+        images = normalizer.forward(images)
 
     return net(tf.cast(images, tf.float32)).mean().numpy(), net(
         tf.cast(images, tf.float32)
@@ -33,7 +34,7 @@ class DeblendField:
         cutout_size=59,
         nb_of_bands=6,
         epistemic_uncertainty_estimation=False,
-        normalization_func=None,
+        normalizer=None,
     ):
         """
         to initialize
@@ -44,7 +45,7 @@ class DeblendField:
             cutout_size: size of the stamps
             nb_of_bands: number of filters in the image
             epistemic_uncertainty_estimation: boolean to indication if expestemic uncertainity extimation is to be done.
-            normalization_func: function to be used for normalization
+            normalizer: object of debvader.normalize.Normalize, used to perform norm and denorm operations
         """
 
         self.net = net
@@ -53,7 +54,11 @@ class DeblendField:
         self.cutout_size = cutout_size
         self.nb_of_bands = nb_of_bands
         self.epistemic_uncertainty_estimation = epistemic_uncertainty_estimation
-        self.normalization_func = normalization_func
+        if (normalizer is not None) and (not isinstance(normalizer, Normalizer)):
+            raise ValueError(
+                "The parameter `normalizer` shoudl be an instance of debvader.normalize.Normalizer"
+            )
+        self.normalizer = normalizer
         self.nb_of_detected_objects = []
         self.nb_of_deblended_galaxies = []
         self.res_deblend = None
@@ -327,7 +332,7 @@ class DeblendField:
         # Deblend the cutouts around the detected galaxies. If needed, create the cutouts.
         if isinstance(cutout_images, np.ndarray):
             output_images_mean, output_images_distribution = deblend(
-                self.net, cutout_images, normalization_func=self.normalization_func
+                self.net, cutout_images, normalizer=self.normalizer
             )
             list_idx = list(range(0, len(output_images_mean)))
         else:
@@ -341,7 +346,7 @@ class DeblendField:
             output_images_mean, output_images_distribution = deblend(
                 self.net,
                 cutout_images[list_idx],
-                normalization_func=self.normalization_func,
+                normalizer=self.normalizer,
             )
         if list_idx == []:
             print("No galaxy deblended. End of the iterative procedure.")
@@ -377,7 +382,7 @@ class DeblendField:
                         deblend(
                             self.net,
                             np.array([cutout_images[k]] * 100),
-                            normalization_func=self.normalization_func,
+                            normalizer=self.normalizer,
                         )[0],
                         axis=0,
                     )
@@ -435,19 +440,18 @@ class DeblendField:
         self.nb_of_deblended_galaxies += [len(list_idx)]
 
         res_deblend["cutout_images"] = list(cutout_images[list_idx])
-        if self.normalization_func is None:
-            res_deblend["output_images_mean"] = output_images_mean
+        if self.normalizer is None:
+            res_deblend["output_images_mean"] = list(output_images_mean)
             res_deblend["output_images_stddev"] = list(
                 output_images_distribution.stddev().numpy()
             )
+
         else:
             res_deblend["output_images_mean"] = list(
-                self.normalization_func(output_images_mean, direction="denormalize")
+                self.normalizer.backward(output_images_mean)
             )
             res_deblend["output_images_stddev"] = list(
-                self.normalization_func(
-                    output_images_distribution.stddev().numpy(), direction="denormalize"
-                )
+                self.normalizer.backward(output_images_distribution.stddev().numpy())
             )
         res_deblend["shifts"] = shifts
         res_deblend["list_idx"] = list_idx
@@ -545,6 +549,7 @@ class DeblendField:
     def deblending_step(
         self,
         field_image,
+        galaxy_distances_to_center=None,
         cutout_images=None,
         optimise_positions=False,
         epistemic_criterion=100.0,
@@ -553,14 +558,16 @@ class DeblendField:
         """
         One step of the iterative procedure called within iterative_procedure.
 
-        paramters:
+        parameters:
             field_image: image of the field to deblend
+            galaxy_distances_to_center: distances of the galaxies to deblend from the center of the field. In pixels.
             cutout_images: stamps centered on the galaxies to deblend
             optimise_position: boolean to indicate if the user wants to use the scipy optimize package to optimise the position of the galaxy
             epistemic_criterion: cut for epistemic uncertainity to get rid of bad predictions
             mse_criterion: cut for mse_criterion to get rid of bad predictions
         """
-        detection_k = detect_objects(field_image)
+        if galaxy_distances_to_center is None:
+            galaxy_distances_to_center = detect_objects(field_image)
         # Avoid to have several detection at the same location
 
         # TODO: Fix this part to get rid of false detections.
@@ -574,7 +581,7 @@ class DeblendField:
 
         res_step = self.deblend_field(
             field_image=field_image,
-            galaxy_distances_to_center=detection_k,
+            galaxy_distances_to_center=galaxy_distances_to_center,
             cutout_images=cutout_images,
             optimise_positions=optimise_positions,
             epistemic_criterion=epistemic_criterion,
