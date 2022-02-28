@@ -181,19 +181,20 @@ def load_deblender(
     kernels,
     return_encoder_decoder_z=False,
     survey="dc2",
-    external_path_to_folder=None,
+    loading_path=None,
 ):
     """
     load weights trained for a particular dataset
     parameters:
-        survey: string calling the particular dataset (choices are: "dc2")
         input_shape: shape of input tensor
         latent_dim: size of the latent space
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
         return_encoder_decoder_z: decides whether to return the encoder, decoder, and latent space or not
-        external_path_to_folder: path to weights if it is sored outside the repository.
+        survey: string calling the particular dataset (currently only "dc2" is supported)
+        loading_path: path to weights if it is sored outside the repository.
             if a path is passed, the survey parameter will be ignored.
+            if left as none, weights from the default survey ("dc2") will be loaded.
     """
     # Create the model
     net, encoder, decoder, z = create_model_vae(
@@ -215,22 +216,18 @@ def load_deblender(
         experimental_run_tf_function=False,
     )
 
-    if external_path_to_folder is None:
+    if loading_path is None:
         # Load the weights corresponding to the chosen survey
         data_path = pkg_resources.resource_filename("debvader", "data/")
         loading_path = os.path.join(
             data_path, "weights", survey, "not_normalised", "loss"
         )
-        print(loading_path)
-        latest = tf.train.latest_checkpoint(loading_path)
-        net.load_weights(latest)
-    else:
-        latest = tf.train.latest_checkpoint(external_path_to_folder)
-        net.load_weights(latest)
 
+    latest = tf.train.latest_checkpoint(loading_path)
+    net.load_weights(latest)
+
+    print("weights loaded from: " + loading_path)
     if return_encoder_decoder_z:
         return net, encoder, decoder, z
-    else:
-        return net
 
     return net
