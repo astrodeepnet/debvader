@@ -21,7 +21,7 @@ class Normalizer(ABC):
 
 class IdentityNorm(Normalizer):
     """
-    Performs identity normalization/denormalization on Cosmos data
+    Performs identity normalization/denormalization
     """
 
     def forward(self, images):
