@@ -53,7 +53,7 @@ class DeblendField:
             cutout_size: size of the stamps
             nb_of_bands: number of filters in the image
             epistemic_uncertainty_estimation: boolean to indication if expestemic uncertainity extimation is to be done.
-            normalizer: object of debvader.normalize.Normalize, used to perform norm and denorm operations.
+            normalizer: instance of debvader.normalize.Normalizer, used to perform normalization operations on input images.
                 Default value is set to debvader.normalize.IdentityNorm which does not perform any normalization
         """
 
