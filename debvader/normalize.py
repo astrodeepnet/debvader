@@ -19,6 +19,30 @@ class Normalizer(ABC):
         pass
 
 
+class IdentityNorm(Normalizer):
+    """
+    Performs identity normalization/denormalization on Cosmos data
+    """
+
+    def forward(self, images):
+        """
+        makes no change to the data during normalization
+
+        parameters:
+            images: numpy array to be denormalzied.
+        """
+        return images
+
+    def backward(self, images):
+        """
+        makes no change to the data during denormalization
+
+        parameters:
+            images: numpy array to be denormalzied.
+        """
+        return images
+
+
 class LinearNormCosmos(Normalizer):
     """
     Performs linear normalization/denormalization on Cosmos data
