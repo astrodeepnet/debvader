@@ -27,9 +27,20 @@ def create_encoder(
     latent_dim,
     filters,
     kernels,
-    conv_activation=None,
-    dense_activation=None,
+    conv_activation="relu",
+    dense_activation="relu",
 ):
+    """
+    Create the encoder of VAE model
+
+    parameters:
+        input_shape: shape of input tensor
+        latent_dim: size of the latent space
+        filters: filters used for the convolutional layers
+        kernels: kernels used for the convolutional layers
+        conv_activation: activation used for convolutional layers
+        dense_activation: activation used for dense layers
+    """
     # Define the prior for the latent space
     # TODO: unused in the code, verify if this prior is needed or not
     # prior = tfd.Independent(
@@ -43,13 +54,16 @@ def create_encoder(
     h = BatchNormalization()(input_layer)
     for i in range(len(filters)):
         h = Conv2D(
-            filters[i], (kernels[i], kernels[i]), activation=None, padding="same"
+            filters[i],
+            (kernels[i], kernels[i]),
+            activation=conv_activation,
+            padding="same",
         )(h)
         h = PReLU()(h)
         h = Conv2D(
             filters[i],
             (kernels[i], kernels[i]),
-            activation=None,
+            activation=dense_activation,
             padding="same",
             strides=(2, 2),
         )(h)
@@ -69,10 +83,20 @@ def create_decoder(
     latent_dim,
     filters,
     kernels,
-    conv_activation=None,
-    dense_activation=None,
+    conv_activation="relu",
+    dense_activation="relu",
 ):
+    """
+    Create the decoder of VAE model
 
+    parameters:
+        input_shape: shape of input tensor
+        latent_dim: size of the latent space
+        filters: filters used for the convolutional layers
+        kernels: kernels used for the convolutional layers
+        conv_activation: activation used for convolutional layers
+        dense_activation: activation used for dense layers
+    """
     input_layer = Input(shape=(latent_dim,))
     h = PReLU()(input_layer)
     h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h)
@@ -127,16 +151,19 @@ def create_model_vae(
     latent_dim,
     filters,
     kernels,
-    conv_activation=None,
-    dense_activation=None,
+    conv_activation="relu",
+    dense_activation="relu",
 ):
     """
     Create the VAE model
+
     parameters:
         input_shape: shape of input tensor
         latent_dim: size of the latent space
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
+        conv_activation: activation used for convolutional layers
+        dense_activation: activation used for dense layers
     """
 
     encoder = create_encoder(
@@ -144,8 +171,8 @@ def create_model_vae(
         latent_dim,
         filters,
         kernels,
-        conv_activation=None,
-        dense_activation=None,
+        conv_activation=conv_activation,
+        dense_activation=dense_activation,
     )
 
     decoder = create_decoder(
@@ -153,8 +180,8 @@ def create_model_vae(
         latent_dim,
         filters,
         kernels,
-        conv_activation=None,
-        dense_activation=None,
+        conv_activation=conv_activation,
+        dense_activation=dense_activation,
     )
 
     # Define the prior for the latent space
@@ -179,6 +206,8 @@ def load_deblender(
     latent_dim,
     filters,
     kernels,
+    conv_activation="relu",
+    dense_activation="relu",
     return_encoder_decoder_z=False,
     survey="dc2",
     loading_path=None,
@@ -190,6 +219,8 @@ def load_deblender(
         latent_dim: size of the latent space
         filters: filters used for the convolutional layers
         kernels: kernels used for the convolutional layers
+        conv_activation: activation used for convolutional layers
+        dense_activation: activation used for dense layers
         return_encoder_decoder_z: decides whether to return the encoder, decoder, and latent space or not
         survey: string calling the particular dataset (currently only "dc2" is supported)
         loading_path: optional path to weights (default is None)
@@ -202,8 +233,8 @@ def load_deblender(
         latent_dim,
         filters,
         kernels,
-        conv_activation=None,
-        dense_activation=None,
+        conv_activation=conv_activation,
+        dense_activation=dense_activation,
     )
 
     # Set the decoder as non-trainable
