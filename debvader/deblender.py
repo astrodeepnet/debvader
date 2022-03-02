@@ -313,16 +313,15 @@ class DeblendField:
             output_image_mean: mean of the output distribution predicted for each pixel
         """
         if self.epistemic_uncertainty_estimation:
-            epistemic_uncertainty = deblend(
-                np.std(
-                    deblend(
-                        self.net,
-                        np.array([cutout_image] * 100),
-                        normalizer=self.normalizer,
-                    )[0],
-                    axis=0,
-                )
+            epistemic_uncertainty = np.std(
+                deblend(
+                    self.net,
+                    np.array([cutout_image] * 100),
+                    normalizer=self.normalizer,
+                )[0],
+                axis=0,
             )
+
             epistemic_uncertainty_normalised = np.sum(
                 epistemic_uncertainty[:, :, 2]
             ) / np.sum(output_image_mean[:, :, 2])
