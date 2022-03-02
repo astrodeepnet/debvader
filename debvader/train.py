@@ -13,6 +13,7 @@ def train_network(
 ):
     """
     train a network on data for a fixed number of epochs
+
     parameters:
         net: network to train
         epochs: number of epochs
@@ -50,13 +51,18 @@ def train_network(
     return hist
 
 
-def define_callbacks(vae_or_deblender, survey_name, weights_save_path=None):
+def define_callbacks(
+    vae_or_deblender, survey_name, weights_save_path=None, lr_scheduler_epochs=None
+):
     """
     Define callbacks for a network to train
+
     parameters:
         vae_or_deblender: training a VAE or a deblender. Used for the saving path.
         survey_name: name of the survey from which the data comes. Used for the saving path.
         weights_save_path: path at which weights are to be saved.path at which weights are to be saved. By default, it saves weights in the data folder.
+        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of 10^.1.
+            Default is None, and a constant learning rate is used
     """
     if weights_save_path is None:
         data_path = pkg_resources.resource_filename("debvader", "data/")
@@ -87,6 +93,18 @@ def define_callbacks(vae_or_deblender, survey_name, weights_save_path=None):
 
     callbacks = [checkpointer_val_mse, checkpointer_val_loss]
 
+    if lr_scheduler_epochs is not None:
+
+        def scheduler(epoch, lr):
+            if epoch % lr_scheduler_epochs != 0:
+                return lr
+            else:
+                return lr * tf.math.exp(-0.1)
+
+        lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
+
+        callbacks = callbacks + [lr_scheduler]
+
     return callbacks
 
 
@@ -103,19 +121,27 @@ def train_deblender(
     batch_size=5,
     verbose=1,
     weights_save_path=None,
+    lr_scheduler_epochs=None,
 ):
     """
     function to train a network for a new survey
-    survey_name: name of the survey
-    from_survey: name of the survey used for transfer learning. The weights saved for this survey will be loaded as initialisation of the network.
-    epochs: number of epochs of training
-    training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
-    validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
-    batch_size: size of batch for training
-    callbacks: callbacks wanted for the training
-    verbose: display of training (1:yes, 2: no)
-    weights_save_path: path at which weights are to be saved. By default, it saves weights in the data folder.
+
+    parameters:
+        survey_name: name of the survey
+        from_survey: name of the survey used for transfer learning. The weights saved for this survey will be loaded as initialisation of the network.
+        epochs: number of epochs of training
+        training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
+        validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
+        batch_size: size of batch for training
+        callbacks: callbacks wanted for the training
+        verbose: display of training (1:yes, 2: no)
+        weights_save_path: path at which weights are to be saved. By default, it saves weights in the data folder.
+        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of 10^.1.
+            Default is None, and a constant learning rate is used
     """
+    if not ((lr_scheduler_epochs is None) | isinstance(lr_scheduler_epochs, int)):
+        raise ValueError("lr_scheduler_epochs should either be 'None' or an int")
+
     # Generate a network for training. The architecture is fixed.
     input_shape = (59, 59, nb_of_bands)
     latent_dim = 32
@@ -171,7 +197,9 @@ def train_deblender(
         net.load_weights(latest)
 
     # Define callbacks for VAE
-    callbacks = define_callbacks("vae", survey_name, weights_save_path)
+    callbacks = define_callbacks(
+        "vae", survey_name, weights_save_path, lr_scheduler_epochs=lr_scheduler_epochs
+    )
 
     # Do the training for the VAE
     hist_vae = train_network(
@@ -200,7 +228,10 @@ def train_deblender(
 
     # Define callbacks for deblender
     callbacks = define_callbacks(
-        "deblender", survey_name, weights_save_path=weights_save_path
+        "deblender",
+        survey_name,
+        weights_save_path=weights_save_path,
+        lr_scheduler_epochs=lr_scheduler_epochs,
     )
 
     # Do the training for the deblender
