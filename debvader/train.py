@@ -116,7 +116,12 @@ def train_deblender(
     validation_data_vae,
     training_data_deblender,
     validation_data_deblender,
-    nb_of_bands=6,
+    input_shape=(59, 59, 6),
+    latent_dim=32,
+    filters=[32, 64, 128, 256],
+    kernels=[3, 3, 3, 3],
+    conv_activation="relu",
+    dense_activation="relu",
     channel_last=True,
     batch_size=5,
     verbose=1,
@@ -132,6 +137,12 @@ def train_deblender(
         epochs: number of epochs of training
         training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
         validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
+        input_shape: shape of input tensor, default value: (59, 59, 6)
+        latent_dim: size of the latent space, default value:  32
+        filters: filters used for the convolutional layers, default value: [32, 64, 128, 256]
+        kernels: kernels used for the convolutional layers, default value: [3, 3, 3, 3],
+        conv_activation: activation used for convolutional layers, default is "relu"
+        dense_activation: activation used for dense layers, default is "relu"
         batch_size: size of batch for training
         callbacks: callbacks wanted for the training
         verbose: display of training (1:yes, 2: no)
@@ -143,18 +154,15 @@ def train_deblender(
         raise ValueError("lr_scheduler_epochs should either be 'None' or an int")
 
     # Generate a network for training. The architecture is fixed.
-    input_shape = (59, 59, nb_of_bands)
-    latent_dim = 32
-    filters = [32, 64, 128, 256]
-    kernels = [3, 3, 3, 3]
+    nb_of_bands = input_shape[-1]
 
     net, encoder, decoder, z = model.create_model_vae(
         input_shape,
         latent_dim,
         filters,
         kernels,
-        conv_activation=None,
-        dense_activation=None,
+        conv_activation=conv_activation,
+        dense_activation=dense_activation,
     )
     print("VAE model")
     net.summary()
