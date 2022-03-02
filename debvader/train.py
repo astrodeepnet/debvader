@@ -103,7 +103,7 @@ def define_callbacks(
 
         lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
-        callbacks = callbacks + [lr_scheduler]
+        callbacks += [lr_scheduler]
 
     return callbacks
 
