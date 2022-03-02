@@ -41,11 +41,6 @@ def create_encoder(
         conv_activation: activation used for convolutional layers
         dense_activation: activation used for dense layers
     """
-    # Define the prior for the latent space
-    # TODO: unused in the code, verify if this prior is needed or not
-    # prior = tfd.Independent(
-    #     tfd.Normal(loc=tf.zeros(latent_dim), scale=1), reinterpreted_batch_ndims=1
-    # )
 
     # Input layer
     input_layer = Input(shape=(input_shape))
@@ -63,7 +58,7 @@ def create_encoder(
         h = Conv2D(
             filters[i],
             (kernels[i], kernels[i]),
-            activation=dense_activation,
+            activation=conv_activation,
             padding="same",
             strides=(2, 2),
         )(h)
@@ -72,7 +67,8 @@ def create_encoder(
     h = Flatten()(h)
     h = PReLU()(h)
     h = Dense(
-        tfp.layers.MultivariateNormalTriL.params_size(latent_dim), activation=None
+        tfp.layers.MultivariateNormalTriL.params_size(latent_dim),
+        activation=dense_activation,
     )(h)
 
     return Model(input_layer, h)
@@ -122,7 +118,9 @@ def create_decoder(
         )(h)
         h = PReLU()(h)
 
-    h = Conv2D(input_shape[-1] * 2, (3, 3), activation="relu", padding="same")(h)
+    h = Conv2D(input_shape[-1] * 2, (3, 3), activation=conv_activation, padding="same")(
+        h
+    )
 
     # In case the last convolutional layer does not provide an image of the size of the input image, cropp it.
     cropping = int(h.get_shape()[1] - input_shape[0])
