@@ -229,7 +229,7 @@ def train_deblender(
     train_decoder = True
 
     if weights_save_path is None:
-        weights_save_path = pkg_resources.resource_filename("debvader", "data/")
+        weights_save_path = pkg_resources.resource_filename("debvader", "data")
 
         sub_folder = survey_name
         if survey_name is None:
