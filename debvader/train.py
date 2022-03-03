@@ -19,7 +19,7 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
     """
 
     checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(weights_save_path, "val_mse/weights_noisy_v4.ckpt"),
+        filepath=os.path.join(weights_save_path, "val_mse", "weights_noisy_v4.ckpt"),
         monitor="val_mse",
         verbose=1,
         save_best_only=True,
@@ -28,7 +28,7 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
         save_freq="epoch",
     )
     checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(weights_save_path, "val_loss/weights_noisy_v4.ckpt"),
+        filepath=os.path.join(weights_save_path, "val_loss", "weights_noisy_v4.ckpt"),
         monitor="val_loss",
         verbose=1,
         save_best_only=True,
@@ -106,8 +106,8 @@ def train_network(
     print(net.summary())
 
     if weights_save_path is None:
-        weights_save_path = pkg_resources.resource_filename("debvader", "data/")
-        weights_save_path = os.path.join(weights_save_path, "trial/")
+        weights_save_path = pkg_resources.resource_filename("debvader", "data")
+        weights_save_path = os.path.join(weights_save_path, "trial")
 
     callbacks = define_callbacks(
         weights_save_path, lr_scheduler_epochs=lr_scheduler_epochs
