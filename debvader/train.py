@@ -230,9 +230,12 @@ def train_deblender(
 
     if weights_save_path is None:
         weights_save_path = pkg_resources.resource_filename("debvader", "data/")
-        weights_save_path = os.path.join(
-            weights_save_path, "weights/", str(survey_name)
-        )
+
+        sub_folder = survey_name
+        if survey_name is None:
+            sub_folder = "trial"
+
+        weights_save_path = os.path.join(weights_save_path, "weights/", sub_folder)
 
     vae_weights_path = os.path.join(weights_save_path, "vae")
 
@@ -257,7 +260,7 @@ def train_deblender(
     train_encoder = True
     train_decoder = False
 
-    deblender_weights_path = os.path.join(weights_save_path, "vae")
+    deblender_weights_path = os.path.join(weights_save_path, "deblender")
     # Do the training for the deblender
     hist_deblender = train_network(
         net=net,
