@@ -33,6 +33,8 @@ def train_network(
             shuffle=True,
             validation_data=validation_data,
             callbacks=callbacks,
+            use_multiprocessing=True,
+            workers=2,
         )
 
     else:
@@ -61,7 +63,7 @@ def define_callbacks(
         vae_or_deblender: training a VAE or a deblender. Used for the saving path.
         survey_name: name of the survey from which the data comes. Used for the saving path.
         weights_save_path: path at which weights are to be saved.path at which weights are to be saved. By default, it saves weights in the data folder.
-        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of 10^.1.
+        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of $e$.
             Default is None, and a constant learning rate is used
     """
     if weights_save_path is None:
@@ -96,10 +98,10 @@ def define_callbacks(
     if lr_scheduler_epochs is not None:
 
         def scheduler(epoch, lr):
-            if epoch % lr_scheduler_epochs != 0:
+            if (epoch + 1) % lr_scheduler_epochs != 0:
                 return lr
             else:
-                return lr * tf.math.exp(-0.1)
+                return lr * tf.math.exp(-1.0)
 
         lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
@@ -143,7 +145,7 @@ def train_deblender(
         callbacks: callbacks wanted for the training
         verbose: display of training (1:yes, 2: no)
         weights_save_path: path at which weights are to be saved. By default, it saves weights in the data folder.
-        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of 10^.1.
+        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of $e$.
             Default is None, and a constant learning rate is used
     """
     if not ((lr_scheduler_epochs is None) | isinstance(lr_scheduler_epochs, int)):
