@@ -214,9 +214,9 @@ def train_deblender(
     # Start from the weights of an already trained network (recommended if possible)
     if (initial_weights_path is None) and (from_survey is not None):
 
-        initial_weights_path = pkg_resources.resource_filename("debvader", "data/")
+        initial_weights_path = pkg_resources.resource_filename("debvader", "data")
         initial_weights_path = os.path.join(
-            initial_weights_path, "weights/", str(from_survey)
+            initial_weights_path, "weights", str(from_survey)
         )
 
     if initial_weights_path is not None:
@@ -235,7 +235,7 @@ def train_deblender(
         if survey_name is None:
             sub_folder = "trial"
 
-        weights_save_path = os.path.join(weights_save_path, "weights/", sub_folder)
+        weights_save_path = os.path.join(weights_save_path, "weights", sub_folder)
 
     vae_weights_path = os.path.join(weights_save_path, "vae")
 
