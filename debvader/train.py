@@ -8,8 +8,63 @@ from debvader import model
 from debvader.metrics import vae_loss
 
 
+def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
+    """
+    Define callbacks for a network to train
+
+    parameters:
+        weights_save_path: path at which weights are to be saved.path at which weights are to be saved. By default, it saves weights in the data folder.
+        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of $e$.
+            Default is None, and a constant learning rate is used
+    """
+
+    checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(
+        filepath=os.path.join(weights_save_path, "val_mse/weights_noisy_v4.ckpt"),
+        monitor="val_mse",
+        verbose=1,
+        save_best_only=True,
+        save_weights_only=True,
+        mode="min",
+        save_freq="epoch",
+    )
+    checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(
+        filepath=os.path.join(weights_save_path, "val_loss/weights_noisy_v4.ckpt"),
+        monitor="val_loss",
+        verbose=1,
+        save_best_only=True,
+        save_weights_only=True,
+        mode="min",
+        save_freq="epoch",
+    )
+
+    callbacks = [checkpointer_val_mse, checkpointer_val_loss]
+
+    if lr_scheduler_epochs is not None:
+
+        def scheduler(epoch, lr):
+            if (epoch + 1) % lr_scheduler_epochs != 0:
+                return lr
+            else:
+                return lr * tf.math.exp(-1.0)
+
+        lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
+
+        callbacks += [lr_scheduler]
+
+    return callbacks
+
+
 def train_network(
-    net, epochs, training_data, validation_data, batch_size, callbacks, verbose=1
+    net,
+    epochs,
+    training_data,
+    validation_data,
+    batch_size,
+    train_encoder,
+    train_decoder,
+    weights_save_path=None,
+    verbose=1,
+    lr_scheduler_epochs=None,
 ):
     """
     train a network on data for a fixed number of epochs
@@ -20,9 +75,43 @@ def train_network(
         training_data: training data under the format of numpy arrays (inputs, labels)
         validation_data: validation data under the format of numpy arrays (inputs, labels)
         batch_size: size of batch for training
-        callbacks: callbacks wanted for the training
+        train_encoder: boolean to select if encoder is to be trained.
+        train_decoder: boolean to select if decoder is to be trained.
+        weights_save_path: path at which weights are to be saved. By default, it saves weights in the data/trial folder.
         verbose: display of training (1:yes, 2: no)
+        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of $e$.
+            Default is None, and a constant learning rate is used
     """
+    if not ((lr_scheduler_epochs is None) | isinstance(lr_scheduler_epochs, int)):
+        raise ValueError("lr_scheduler_epochs should either be 'None' or an int")
+
+    if not (train_encoder or train_decoder):
+        raise ValueError("At least one of encoder or decoder must be trainable.")
+
+    net.get_layer("encoder").trainable = train_encoder
+    net.get_layer("decoder").trainable = train_decoder
+
+    # Custom metric to display the KL divergence during training
+    def kl_metric(y_true, y_pred):
+        return K.sum(net.losses)
+
+    # Compilation
+    net.compile(
+        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        loss=vae_loss,
+        metrics=["mse", kl_metric],
+        experimental_run_tf_function=False,
+    )
+
+    print(net.summary())
+
+    if weights_save_path is None:
+        weights_save_path = pkg_resources.resource_filename("debvader", "data/")
+        weights_save_path = os.path.join(weights_save_path, "trial/")
+
+    callbacks = define_callbacks(
+        weights_save_path, lr_scheduler_epochs=lr_scheduler_epochs
+    )
 
     print("\nStart the training")
     if isinstance(training_data, tf.keras.utils.Sequence):
@@ -53,71 +142,12 @@ def train_network(
     return hist
 
 
-def define_callbacks(
-    vae_or_deblender, survey_name, weights_save_path=None, lr_scheduler_epochs=None
-):
-    """
-    Define callbacks for a network to train
-
-    parameters:
-        vae_or_deblender: training a VAE or a deblender. Used for the saving path.
-        survey_name: name of the survey from which the data comes. Used for the saving path.
-        weights_save_path: path at which weights are to be saved.path at which weights are to be saved. By default, it saves weights in the data folder.
-        lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of $e$.
-            Default is None, and a constant learning rate is used
-    """
-    if weights_save_path is None:
-        data_path = pkg_resources.resource_filename("debvader", "data/")
-    else:
-        data_path = weights_save_path
-
-    saving_path = os.path.join(
-        data_path, "weights/", str(survey_name), str(vae_or_deblender), ""
-    )
-    checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(
-        filepath=saving_path + "val_mse/weights_noisy_v4.ckpt",
-        monitor="val_mse",
-        verbose=1,
-        save_best_only=True,
-        save_weights_only=True,
-        mode="min",
-        save_freq="epoch",
-    )
-    checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(
-        filepath=saving_path + "val_loss/weights_noisy_v4.ckpt",
-        monitor="val_loss",
-        verbose=1,
-        save_best_only=True,
-        save_weights_only=True,
-        mode="min",
-        save_freq="epoch",
-    )
-
-    callbacks = [checkpointer_val_mse, checkpointer_val_loss]
-
-    if lr_scheduler_epochs is not None:
-
-        def scheduler(epoch, lr):
-            if (epoch + 1) % lr_scheduler_epochs != 0:
-                return lr
-            else:
-                return lr * tf.math.exp(-1.0)
-
-        lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
-
-        callbacks += [lr_scheduler]
-
-    return callbacks
-
-
 def train_deblender(
-    survey_name,
-    from_survey,
-    epochs,
     training_data_vae,
     validation_data_vae,
     training_data_deblender,
     validation_data_deblender,
+    epochs,
     input_shape=(59, 59, 6),
     latent_dim=32,
     filters=[32, 64, 128, 256],
@@ -125,54 +155,47 @@ def train_deblender(
     channel_last=True,
     batch_size=5,
     verbose=1,
+    initial_weights_path=None,
+    from_survey=None,
     weights_save_path=None,
+    survey_name=None,
     lr_scheduler_epochs=None,
 ):
     """
     function to train a network for a new survey
 
     parameters:
-        survey_name: name of the survey
-        from_survey: name of the survey used for transfer learning. The weights saved for this survey will be loaded as initialisation of the network.
-        epochs: number of epochs of training
         training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
         validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
+        epochs: number of epochs of training
         input_shape: shape of input tensor, default value: (59, 59, 6)
         latent_dim: size of the latent space, default value:  32
         filters: filters used for the convolutional layers, default value: [32, 64, 128, 256]
         kernels: kernels used for the convolutional layers, default value: [3, 3, 3, 3]
+        channel_last: boolean to indicate if the last lasat index for data refers to channels
         batch_size: size of batch for training
-        callbacks: callbacks wanted for the training
         verbose: display of training (1:yes, 2: no)
-        weights_save_path: path at which weights are to be saved. By default, it saves weights in the data folder.
+        initial_weights_path: path to folder from whrere initial weights are loaded for transfer learning.
+            If the initial_weights_path is provided, the `from_survey` parameter will be ignored.
+        from_survey: loads weights for transfer learning from corresponding folder within the `data` folder.
+            Used only if `initial_weights_path` is None.
+        weights_save_path: path at which weights are to be saved.
+            If the path to save weights is passed, the `survey_name` parameter is ignored.
+            By default, if both `weights_save_path` and `survey_name` is None, weights in the `trial` folder within the `data` folder
+        survey_name: used to speficy the path within the `data/` folder where the trained weights are to be saved.
+            By default, if both `weights_save_path` and `survey_name` is None, weights in the `trial` folder within the `data` folder
         lr_scheduler_epochs: number of iterations after which the learning rate is decreased by a factor of $e$.
             Default is None, and a constant learning rate is used
     """
-    if not ((lr_scheduler_epochs is None) | isinstance(lr_scheduler_epochs, int)):
-        raise ValueError("lr_scheduler_epochs should either be 'None' or an int")
 
     # Generate a network for training. The architecture is fixed.
     nb_of_bands = input_shape[-1]
 
-    net, encoder, decoder, z = model.create_model_vae(
+    net, _, _, _ = model.create_model_vae(
         input_shape,
         latent_dim,
         filters,
         kernels,
-    )
-    print("VAE model")
-    net.summary()
-
-    # Custom metric to display the KL divergence during training
-    def kl_metric(y_true, y_pred):
-        return K.sum(net.losses)
-
-    # Compilation
-    net.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
-        loss=vae_loss,
-        metrics=["mse", kl_metric],
-        experimental_run_tf_function=False,
     )
 
     # Check if data format is correct
@@ -189,64 +212,64 @@ def train_deblender(
             raise ValueError
 
     # Start from the weights of an already trained network (recommended if possible)
-    if from_survey is not None:
+    if (initial_weights_path is None) and (from_survey is not None):
 
-        data_path = pkg_resources.resource_filename("debvader", "data/")
-        path_output = os.path.join(
-            data_path, "weights/", str(from_survey), "not_normalised/"
+        initial_weights_path = pkg_resources.resource_filename("debvader", "data/")
+        initial_weights_path = os.path.join(
+            initial_weights_path, "weights/", str(from_survey)
         )
 
-        print(path_output)
-        latest = tf.train.latest_checkpoint(path_output)
+    if initial_weights_path is not None:
+        print("Initial training weights loaded from: " + initial_weights_path)
+        latest = tf.train.latest_checkpoint(initial_weights_path)
         net.load_weights(latest)
 
-    # Define callbacks for VAE
-    callbacks = define_callbacks(
-        "vae", survey_name, weights_save_path, lr_scheduler_epochs=lr_scheduler_epochs
-    )
+    # train the VAE to learn representations of isolated galaxies.
+    train_encoder = True
+    train_decoder = True
+
+    if weights_save_path is None:
+        weights_save_path = pkg_resources.resource_filename("debvader", "data/")
+        weights_save_path = os.path.join(
+            weights_save_path, "weights/", str(survey_name)
+        )
+
+    vae_weights_path = os.path.join(weights_save_path, "vae")
 
     # Do the training for the VAE
     hist_vae = train_network(
-        net,
-        epochs,
-        training_data_vae,
-        validation_data_vae,
-        batch_size,
-        callbacks,
-        verbose,
+        net=net,
+        epochs=epochs,
+        training_data=training_data_vae,
+        validation_data=validation_data_vae,
+        batch_size=batch_size,
+        train_encoder=True,
+        train_decoder=True,
+        weights_save_path=vae_weights_path,
+        verbose=verbose,
+        lr_scheduler_epochs=lr_scheduler_epochs,
     )
     print("\nTraining of VAE done.")
 
+    # Now, train the encoder as a deblender.
+
     # Set the decoder as non-trainable
-    decoder.trainable = False
+    train_encoder = True
+    train_decoder = False
 
-    # Compilation of the deblender
-    net.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
-        loss=vae_loss,
-        metrics=["mse", kl_metric],
-        experimental_run_tf_function=False,
-    )
-    print("\n\nDeblender model")
-    net.summary()
-
-    # Define callbacks for deblender
-    callbacks = define_callbacks(
-        "deblender",
-        survey_name,
-        weights_save_path=weights_save_path,
-        lr_scheduler_epochs=lr_scheduler_epochs,
-    )
-
+    deblender_weights_path = os.path.join(weights_save_path, "vae")
     # Do the training for the deblender
     hist_deblender = train_network(
-        net,
-        epochs,
-        training_data_deblender,
-        validation_data_deblender,
-        batch_size,
-        callbacks,
-        verbose,
+        net=net,
+        epochs=epochs,
+        training_data=training_data_deblender,
+        validation_data=validation_data_deblender,
+        batch_size=batch_size,
+        train_encoder=train_encoder,
+        train_decoder=train_decoder,
+        weights_save_path=deblender_weights_path,
+        verbose=verbose,
+        lr_scheduler_epochs=lr_scheduler_epochs,
     )
     print("\nTraining of Deblender done.")
 
