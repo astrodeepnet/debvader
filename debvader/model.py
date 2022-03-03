@@ -67,7 +67,7 @@ def create_encoder(
         activation=None,
     )(h)
 
-    return Model(input_layer, h)
+    return Model(input_layer, h, name="encoder")
 
 
 def create_decoder(
@@ -131,7 +131,7 @@ def create_decoder(
         convert_to_tensor_fn=tfp.distributions.Distribution.sample,
     )(h)
 
-    return Model(input_layer, h)
+    return Model(input_layer, h, name="decoder")
 
 
 def create_model_vae(
