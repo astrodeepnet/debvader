@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 
 def mse(img1, img2):
@@ -17,10 +18,12 @@ def vae_loss(ground_truth, predicted_distribution):
     """
     computes the reconstaruction loss term for the VAE.
 
-    returns the log_prob of the ground truth under the predicted distribution
+    returns the negative log_prob of the ground truth under the predicted distribution
 
     parameters:
         ground_truth: original ground truth image
         predicted_distribution: distribution predicted by network
     """
-    return -predicted_distribution.log_prob(ground_truth)
+    return -tf.math.reduce_sum(
+        predicted_distribution.log_prob(ground_truth), axis=[1, 2, 3]
+    )
