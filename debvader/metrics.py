@@ -24,6 +24,8 @@ def vae_loss(ground_truth, predicted_distribution):
         ground_truth: original ground truth image
         predicted_distribution: distribution predicted by network
     """
-    return -tf.math.reduce_sum(
-        predicted_distribution.log_prob(ground_truth), axis=[1, 2, 3]
+    return -tf.math.reduce_mean(
+        tf.math.reduce_sum(
+            predicted_distribution.log_prob(ground_truth), axis=[1, 2, 3]
+        )
     )
