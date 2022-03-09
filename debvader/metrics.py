@@ -16,13 +16,13 @@ def mse(img1, img2):
 # Define the loss as the log likelihood of the distribution on the image pixels
 def vae_loss(ground_truth, predicted_distribution):
     """
-    computes the reconstaruction loss term for the VAE.
+    computes the reconstruction loss term for the VAE.
 
     returns the negative log_prob of the ground truth under the predicted distribution
 
     parameters:
         ground_truth: original ground truth image
-        predicted_distribution: distribution predicted by network
+        predicted_distribution: output distribution from the decoder network
     """
     return -tf.math.reduce_mean(
         tf.math.reduce_sum(
