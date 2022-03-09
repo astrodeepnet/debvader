@@ -18,7 +18,9 @@ def vae_loss(ground_truth, predicted_distribution):
     """
     computes the reconstruction loss term for the VAE.
 
-    returns the negative log_prob of the ground truth under the predicted distribution
+    The function takes as input the output of the decoder which is a distribution for each pixel.
+    It first calculates the probability of each pixel ground truth under the predicted distrib,
+    sums over all the pixels in an image, and finally returns the average over the batch.
 
     parameters:
         ground_truth: original ground truth image
