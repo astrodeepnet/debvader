@@ -62,6 +62,8 @@ def create_encoder(
 
     h = Flatten()(h)
     h = PReLU()(h)
+    h = Dense(1024)(h)
+    h = PReLU()(h)
     h = Dense(
         tfp.layers.MultivariateNormalTriL.params_size(latent_dim),
         activation=None,
@@ -86,7 +88,7 @@ def create_decoder(
         kernels: kernels used for the convolutional layers
     """
     input_layer = Input(shape=(latent_dim,))
-    h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(input_layer)
+    h = Dense(128)(input_layer)
     h = PReLU()(h)
     w = int(np.ceil(input_shape[0] / 2 ** (len(filters))))
     h = Dense(w * w * filters[-1], activation=None)(tf.cast(h, tf.float32))
@@ -174,6 +176,7 @@ def create_model_vae(
     z = tfp.layers.MultivariateNormalTriL(
         latent_dim,
         activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01),
+        name="latent_space",
     )(encoder(x_input))
 
     net = Model(inputs=x_input, outputs=decoder(z))
