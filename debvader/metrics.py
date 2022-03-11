@@ -14,6 +14,7 @@ def mse(img1, img2):
 
 
 # Define the loss as the log likelihood of the distribution on the image pixels
+@tf.function
 def vae_loss(ground_truth, predicted_distribution):
     """
     computes the reconstruction loss term for the VAE.
