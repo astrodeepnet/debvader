@@ -260,6 +260,11 @@ def train_deblender(
     train_encoder = True
     train_decoder = False
 
+    new_encoder = model.create_encoder(
+        input_shape=input_shape, latent_dim=latent_dim, filters=filters, kernels=kernels
+    )
+    net.get_layer("encoder").set_weights(new_encoder.get_weights())
+
     deblender_weights_path = os.path.join(weights_save_path, "deblender")
     # Do the training for the deblender
     hist_deblender = train_network(
