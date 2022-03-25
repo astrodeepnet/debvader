@@ -123,7 +123,7 @@ def train_network(
             validation_data=validation_data,
             callbacks=callbacks,
             use_multiprocessing=True,
-            workers=2,
+            workers=4,
         )
 
     else:
@@ -147,7 +147,8 @@ def train_deblender(
     validation_data_vae,
     training_data_deblender,
     validation_data_deblender,
-    epochs,
+    vae_epochs=100,
+    deblender_epochs=200,
     input_shape=(59, 59, 6),
     latent_dim=32,
     filters=[32, 64, 128, 256],
@@ -167,7 +168,8 @@ def train_deblender(
     parameters:
         training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
         validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
-        epochs: number of epochs of training
+        vae_epochs: number of epochs of training vae
+        deblender_epochs: number of epochs for training deblender
         input_shape: shape of input tensor, default value: (59, 59, 6)
         latent_dim: size of the latent space, default value:  32
         filters: filters used for the convolutional layers, default value: [32, 64, 128, 256]
@@ -242,7 +244,7 @@ def train_deblender(
     # Do the training for the VAE
     hist_vae = train_network(
         net=net,
-        epochs=epochs,
+        epochs=vae_epochs,
         training_data=training_data_vae,
         validation_data=validation_data_vae,
         batch_size=batch_size,
@@ -269,7 +271,7 @@ def train_deblender(
     # Do the training for the deblender
     hist_deblender = train_network(
         net=net,
-        epochs=epochs,
+        epochs=deblender_epochs,
         training_data=training_data_deblender,
         validation_data=validation_data_deblender,
         batch_size=batch_size,
