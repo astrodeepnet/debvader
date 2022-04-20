@@ -37,7 +37,9 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
         save_freq="epoch",
     )
 
-    callbacks = [checkpointer_val_mse, checkpointer_val_loss]
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=15)
+
+    callbacks = [checkpointer_val_mse, checkpointer_val_loss, early_stopping]
 
     if lr_scheduler_epochs is not None:
 
@@ -50,6 +52,8 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
         lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
         callbacks += [lr_scheduler]
+
+    callbacks += [tf.keras.callbacks.TerminateOnNaN()]
 
     return callbacks
 
