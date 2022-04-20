@@ -101,10 +101,10 @@ def train_network(
 
     # Compilation
     net.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        optimizer=tf.optimizers.Adam(learning_rate=1e-3),
         loss=vae_loss,
         metrics=["mse", kl_metric],
-        experimental_run_tf_function=False,
+        experimental_run_tf_function=True,
     )
 
     print(net.summary())
@@ -153,8 +153,8 @@ def train_deblender(
     validation_data_deblender,
     vae_epochs=100,
     deblender_epochs=200,
-    input_shape=(59, 59, 6),
-    latent_dim=32,
+    input_shape=(45, 45, 6),
+    latent_dim=10,
     filters=[32, 64, 128, 256],
     kernels=[3, 3, 3, 3],
     channel_last=True,
@@ -174,8 +174,8 @@ def train_deblender(
         validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
         vae_epochs: number of epochs of training vae
         deblender_epochs: number of epochs for training deblender
-        input_shape: shape of input tensor, default value: (59, 59, 6)
-        latent_dim: size of the latent space, default value:  32
+        input_shape: shape of input tensor, default value: (45, 45, 6)
+        latent_dim: size of the latent space, default value:  10
         filters: filters used for the convolutional layers, default value: [32, 64, 128, 256]
         kernels: kernels used for the convolutional layers, default value: [3, 3, 3, 3]
         channel_last: boolean to indicate if the last lasat index for data refers to channels
