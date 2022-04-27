@@ -153,7 +153,7 @@ def train_deblender(
     validation_data_deblender,
     vae_epochs=100,
     deblender_epochs=200,
-    input_shape=(45, 45, 6),
+    input_shape=(59, 59, 6),
     latent_dim=10,
     filters=[32, 64, 128, 256],
     kernels=[3, 3, 3, 3],
