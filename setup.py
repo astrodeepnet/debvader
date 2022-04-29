@@ -9,8 +9,8 @@ requirements = [
     "matplotlib",
     "numpy",
     "pandas",
-    "tensorflow",
-    "tensorflow-probability",
+    "tensorflow=2.3.0",
+    "tensorflow-probability==0.11.0",
     "scikit-image",
     "sep",
 ]
