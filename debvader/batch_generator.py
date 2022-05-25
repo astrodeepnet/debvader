@@ -1,7 +1,7 @@
 from random import choice
 
 import numpy as np
-from tensorflow.keras.utils import Sequence
+from tensorflow.python.keras.utils.data_utils import Sequence
 
 from debvader.normalize import Normalizer
 
@@ -15,7 +15,6 @@ class COSMOSsequence(Sequence):
         batch_size,
         num_iterations_per_epoch,
         normalizer=None,
-        channel_last=False,
     ):
         """
         initializes the Data generator
@@ -40,7 +39,6 @@ class COSMOSsequence(Sequence):
             )
 
         self.normalizer = normalizer
-        self.channel_last = channel_last
 
     def __len__(self):
         return self.num_iterations_per_epoch
@@ -53,7 +51,6 @@ class COSMOSsequence(Sequence):
         batch = np.random.choice(current_sample, size=self.batch_size, replace=False)
         x = batch[self.x_col_name]
         y = batch[self.y_col_name]
-
         x = np.array(x.tolist())
         y = np.array(y.tolist())
 
@@ -63,16 +60,16 @@ class COSMOSsequence(Sequence):
 
         #  flip : flipping the image array
         # if not self.channel_last:
-        #    rand = np.random.randint(4)
-        #    if rand == 1:
-        #        x = np.flip(x, axis=-1)
-        #        y = np.flip(y, axis=-1)
-        #    elif rand == 2 :
-        #        x = np.swapaxes(x, -1, -2)
-        #        y = np.swapaxes(y, -1, -2)
-        #    elif rand == 3:
-        #        x = np.swapaxes(np.flip(x, axis=-1), -1, -2)
-        #        y = np.swapaxes(np.flip(y, axis=-1), -1, -2)
+        rand = np.random.randint(4)
+        if rand == 1:
+            x = np.flip(x, axis=-1)
+            y = np.flip(y, axis=-1)
+        elif rand == 2:
+            x = np.swapaxes(x, -1, -2)
+            y = np.swapaxes(y, -1, -2)
+        elif rand == 3:
+            x = np.swapaxes(np.flip(x, axis=-1), -1, -2)
+            y = np.swapaxes(np.flip(y, axis=-1), -1, -2)
 
         # Change the shape of inputs and targets to feed the network
         x = np.transpose(x, axes=(0, 2, 3, 1))
