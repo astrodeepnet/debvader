@@ -1,5 +1,3 @@
-jax
-jaxlib
 jupyter
 matplotlib
 numpy

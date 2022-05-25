@@ -4,12 +4,10 @@ with open("README.md") as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    "jax",
-    "jaxlib",
     "matplotlib",
     "numpy",
     "pandas",
-    "tensorflow=2.3.0",
+    "tensorflow==2.3.0",
     "tensorflow-probability==0.11.0",
     "scikit-image",
     "sep",
