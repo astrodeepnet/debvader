@@ -19,7 +19,7 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
     """
 
     checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(weights_save_path, "val_mse", "weights_noisy_v4.ckpt"),
+        filepath=os.path.join(weights_save_path, "val_mse", "weights.ckpt"),
         monitor="val_mse",
         verbose=1,
         save_best_only=True,
@@ -28,7 +28,7 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
         save_freq="epoch",
     )
     checkpointer_val_loss = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(weights_save_path, "val_loss", "weights_noisy_v4.ckpt"),
+        filepath=os.path.join(weights_save_path, "val_loss", "weights.ckpt"),
         monitor="val_loss",
         verbose=1,
         save_best_only=True,
@@ -37,7 +37,9 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
         save_freq="epoch",
     )
 
-    callbacks = [checkpointer_val_mse, checkpointer_val_loss]
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=15)
+
+    callbacks = [checkpointer_val_mse, checkpointer_val_loss, early_stopping]
 
     if lr_scheduler_epochs is not None:
 
@@ -50,6 +52,8 @@ def define_callbacks(weights_save_path, lr_scheduler_epochs=None):
         lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
         callbacks += [lr_scheduler]
+
+    callbacks += [tf.keras.callbacks.TerminateOnNaN()]
 
     return callbacks
 
@@ -97,10 +101,10 @@ def train_network(
 
     # Compilation
     net.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        optimizer=tf.optimizers.Adam(learning_rate=1e-3),
         loss=vae_loss,
         metrics=["mse", kl_metric],
-        experimental_run_tf_function=False,
+        experimental_run_tf_function=True,
     )
 
     print(net.summary())
@@ -123,7 +127,7 @@ def train_network(
             validation_data=validation_data,
             callbacks=callbacks,
             use_multiprocessing=True,
-            workers=2,
+            workers=4,
         )
 
     else:
@@ -147,9 +151,10 @@ def train_deblender(
     validation_data_vae,
     training_data_deblender,
     validation_data_deblender,
-    epochs,
+    vae_epochs=100,
+    deblender_epochs=200,
     input_shape=(59, 59, 6),
-    latent_dim=32,
+    latent_dim=10,
     filters=[32, 64, 128, 256],
     kernels=[3, 3, 3, 3],
     channel_last=True,
@@ -167,9 +172,10 @@ def train_deblender(
     parameters:
         training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
         validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
-        epochs: number of epochs of training
-        input_shape: shape of input tensor, default value: (59, 59, 6)
-        latent_dim: size of the latent space, default value:  32
+        vae_epochs: number of epochs of training vae
+        deblender_epochs: number of epochs for training deblender
+        input_shape: shape of input tensor, default value: (45, 45, 6)
+        latent_dim: size of the latent space, default value:  10
         filters: filters used for the convolutional layers, default value: [32, 64, 128, 256]
         kernels: kernels used for the convolutional layers, default value: [3, 3, 3, 3]
         channel_last: boolean to indicate if the last lasat index for data refers to channels
@@ -242,7 +248,7 @@ def train_deblender(
     # Do the training for the VAE
     hist_vae = train_network(
         net=net,
-        epochs=epochs,
+        epochs=vae_epochs,
         training_data=training_data_vae,
         validation_data=validation_data_vae,
         batch_size=batch_size,
@@ -269,7 +275,7 @@ def train_deblender(
     # Do the training for the deblender
     hist_deblender = train_network(
         net=net,
-        epochs=epochs,
+        epochs=deblender_epochs,
         training_data=training_data_deblender,
         validation_data=validation_data_deblender,
         batch_size=batch_size,
