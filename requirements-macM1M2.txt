@@ -8,3 +8,5 @@ scipy==1.11.2
 sep
 tensorflow==2.13.0
 tensorflow-probability==0.21.0
+tensorflow-metal==1.0.1
+
