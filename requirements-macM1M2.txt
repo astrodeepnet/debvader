@@ -1,6 +1,6 @@
 # python 3.11.5
-jax==0.4.15
-jaxlib==0.4.15
+jax
+jaxlib
 jupyter
 matplotlib
 notebook
