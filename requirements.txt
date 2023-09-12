@@ -1,6 +1,8 @@
 jax
 jaxlib
+jupyter
 matplotlib
+notebook
 numpy
 pandas
 scipy

@@ -33,5 +33,5 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    package_data={"debvader": ["data/*"]},
+    package_data={"debvader": ["data/*", "data/*/*", "data/*/*/*", "data/*/*/*/*", "data/*/*/*/*/*"]},
 )
