@@ -202,7 +202,7 @@ def load_deblender(
 
     # Compile the model
     net.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        optimizer=tf.optimizers.legacy.Adam(learning_rate=1e-4),
         loss=vae_loss,
         experimental_run_tf_function=False,
     )

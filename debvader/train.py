@@ -122,7 +122,7 @@ def train_deblender(
 
     # Compilation
     net.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        optimizer=tf.optimizers.legacy.Adam(learning_rate=1e-4),
         loss=vae_loss,
         metrics=["mse", kl_metric],
         experimental_run_tf_function=False,
@@ -172,7 +172,7 @@ def train_deblender(
 
     # Compilation of the deblender
     net.compile(
-        optimizer=tf.optimizers.Adam(learning_rate=1e-4),
+        optimizer=tf.optimizers.legacy.Adam(learning_rate=1e-4),
         loss=vae_loss,
         metrics=["mse", kl_metric],
         experimental_run_tf_function=False,
