@@ -17,7 +17,7 @@ def deblend(net, images, normalised=False):
         # Normalize input images
         images_normed = np.tanh(np.arcsinh(images))
         # Denorm output images
-        images = np.sinh(np.arctanh(net.predict(images_normed)))
+        images = np.sinh(np.arctanh(images_normed))
 
     return net(tf.cast(images, tf.float32)).mean().numpy(), net(
         tf.cast(images, tf.float32)
