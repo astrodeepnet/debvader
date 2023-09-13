@@ -4,7 +4,7 @@ import numpy as np
 import pkg_resources
 import tensorflow as tf
 import tensorflow_probability as tfp
-
+from tensorflow_probability.python.math import fill_triangular
 from tensorflow.keras.layers import (
     BatchNormalization,
     Conv2D,
@@ -21,6 +21,41 @@ from tensorflow.keras.models import Model
 from debvader.deblend_cutout.metrics import vae_loss
 
 tfd = tfp.distributions
+tfb = tfp.bijectors
+
+
+class Normal(tf.Module):
+    def __init__(self, input_shape, name=None):
+        super().__init__(name=name)
+        self.input_shape = input_shape
+
+    def __call__(self, t):
+        mean = t[..., : self.input_shape[-1]]
+        scale = 1e-4 + t[..., self.input_shape[-1] :]
+        sample = tf.random.normal(
+            [],
+            mean=mean,
+            stddev=scale,
+        )
+        return sample
+
+
+class MvNormal(tf.Module):
+    def __init__(self, latent_dim, name=None):
+        super().__init__(name=name)
+        self.latent_dim = latent_dim
+
+    def __call__(self, t):
+        diag_shift = np.array(1e-5, t.dtype.as_numpy_dtype)
+        scale_tril = fill_triangular(t[..., self.latent_dim :])
+        diag = tf.nn.softplus(tf.linalg.diag_part(scale_tril)) + diag_shift
+        scale_tril = tf.linalg.set_diag(scale_tril, diag)
+        #   scale_tril_bij = tfb.FillScaleTriL(diag_shift=diag_shift)
+        #   scale_tril = scale_tril_bij(t[..., self.latent_dim:])
+
+        loc = t[..., : self.latent_dim]
+        samples = tf.random.normal([], mean=tf.zeros_like(loc), dtype=t.dtype)
+        return loc + tf.linalg.matvec(scale_tril, samples)
 
 
 def create_encoder(
@@ -72,8 +107,8 @@ def create_decoder(
     kernels,
     conv_activation=None,
     dense_activation=None,
+    for_onnx=False,
 ):
-
     input_layer = Input(shape=(latent_dim,))
     h = PReLU()(input_layer)
     h = Dense(tfp.layers.MultivariateNormalTriL.params_size(32))(h)
@@ -113,12 +148,15 @@ def create_decoder(
             )(h)
 
     # Build the encoder only
-    h = tfp.layers.DistributionLambda(
-        make_distribution_fn=lambda t: tfd.Normal(
-            loc=t[..., : input_shape[-1]], scale=1e-4 + t[..., input_shape[-1] :]
-        ),
-        convert_to_tensor_fn=tfp.distributions.Distribution.sample,
-    )(h)
+    if for_onnx:
+        h = Normal(input_shape)(h)
+    else:
+        h = tfp.layers.DistributionLambda(
+            make_distribution_fn=lambda t: tfd.Normal(
+                loc=t[..., : input_shape[-1]], scale=1e-4 + t[..., input_shape[-1] :]
+            ),
+            convert_to_tensor_fn=tfp.distributions.Distribution.sample,
+        )(h)
 
     return Model(input_layer, h)
 
@@ -130,6 +168,7 @@ def create_model_vae(
     kernels,
     conv_activation=None,
     dense_activation=None,
+    for_onnx=False,
 ):
     """
     Create the VAE model
@@ -156,19 +195,23 @@ def create_model_vae(
         kernels,
         conv_activation=None,
         dense_activation=None,
+        for_onnx=for_onnx,
     )
-
-    # Define the prior for the latent space
-    prior = tfd.Independent(
-        tfd.Normal(loc=tf.zeros(latent_dim), scale=1), reinterpreted_batch_ndims=1
-    )
-
     # Build the model
     x_input = Input(shape=(input_shape))
-    z = tfp.layers.MultivariateNormalTriL(
-        latent_dim,
-        activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01),
-    )(encoder(x_input))
+
+    if for_onnx:
+        z = MvNormal(latent_dim)(encoder(x_input))
+    else:
+        # Define the prior for the latent space
+        prior = tfd.Independent(
+            tfd.Normal(loc=tf.zeros(latent_dim), scale=1), reinterpreted_batch_ndims=1
+        )
+
+        z = tfp.layers.MultivariateNormalTriL(
+            latent_dim,
+            activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=0.01),
+        )(encoder(x_input))
 
     net = Model(inputs=x_input, outputs=decoder(z))
 
@@ -176,7 +219,13 @@ def create_model_vae(
 
 
 def load_deblender(
-    survey, input_shape, latent_dim, filters, kernels, return_encoder_decoder_z=False
+    survey,
+    input_shape,
+    latent_dim,
+    filters,
+    kernels,
+    return_encoder_decoder_z=False,
+    for_onnx=False,
 ):
     """
     load weights trained for a particular dataset
@@ -196,6 +245,7 @@ def load_deblender(
         kernels,
         conv_activation=None,
         dense_activation=None,
+        for_onnx=for_onnx,
     )
 
     # Set the decoder as non-trainable
@@ -219,5 +269,3 @@ def load_deblender(
         return net, encoder, decoder, z
     else:
         return net
-
-    return net
