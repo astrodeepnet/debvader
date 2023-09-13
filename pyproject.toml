@@ -4,7 +4,7 @@ version = "0.0.81191"
 #author = "The AstroDeep Team"
 description = "Galaxy deblender from variational autoencoders"
 #url = "https://github.com/astrodeepnet/debvader"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
     "jax",
     "jaxlib",
