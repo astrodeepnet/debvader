@@ -1,4 +1,4 @@
-# python 3.11.5
+# python 3.11.5 is baseline, tested with 3.9.18 and 3.10.9
 jax
 jaxlib
 jupyter
