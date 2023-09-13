@@ -4,6 +4,7 @@ import numpy as np
 import pkg_resources
 import tensorflow as tf
 import tensorflow_probability as tfp
+
 from tensorflow.keras.layers import (
     BatchNormalization,
     Conv2D,
