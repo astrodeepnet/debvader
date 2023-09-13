@@ -4,8 +4,8 @@ import pkg_resources
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
-from debvader.deblend import model
-from debvader.deblend.metrics import vae_loss
+from debvader.deblend_cutout import model
+from debvader.deblend_cutout.metrics import vae_loss
 
 
 def train_network(
