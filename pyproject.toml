@@ -1,0 +1,26 @@
+[project]
+name = "debvader"
+version = "0.0.81191"
+#author = "The AstroDeep Team"
+description = "Galaxy deblender from variational autoencoders"
+#url = "https://github.com/astrodeepnet/debvader"
+requires-python = ">=3.11"
+dependencies = [
+    "jax",
+    "jaxlib",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "tensorflow",
+    "tensorflow-probability",
+    "scikit-image",
+    "sep"
+]
+
+[build-system]
+requires = ["setuptools>=68.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["debvader"]  

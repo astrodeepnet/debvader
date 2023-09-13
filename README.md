@@ -28,6 +28,13 @@ An application of `debvader` on DC2 images is presented in [this notebook tutori
 ```bash
 python -m pip install git+https://github.com/astrodeepnet/debvader
 ```
+
+or locally
+
+```bash
+pip install --editable .
+```
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
