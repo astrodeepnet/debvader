@@ -15,7 +15,7 @@ class IterativeDeblendField(DeblendField):
         epistemic_uncertainty_estimation=False,
         normalise=False
     ): 
-        super(self)(net,field_image,cutout_size,nb_of_bands,epistemic_uncertainty_estimation,normalise)
+        super().__init__(net,field_image,cutout_size,nb_of_bands,epistemic_uncertainty_estimation,normalise)
 
 
     def iterative_deblending(
