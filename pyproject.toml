@@ -6,8 +6,6 @@ description = "Galaxy deblender from variational autoencoders"
 #url = "https://github.com/astrodeepnet/debvader"
 requires-python = ">=3.9"
 dependencies = [
-    "jax",
-    "jaxlib",
     "matplotlib",
     "numpy",
     "pandas",
@@ -23,4 +21,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["debvader"]  
+include = ["debvader"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]
