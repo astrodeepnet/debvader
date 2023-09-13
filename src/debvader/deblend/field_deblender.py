@@ -1,31 +1,7 @@
-import numpy as np
-import pandas as pd
-import scipy
-import tensorflow as tf
-
 from debvader.detect.detection import detect_objects
 from debvader.extract.extraction import extract_cutouts
-from debvader.deblend.metrics import mse
-from debvader.deblend.optimization import position_optimization
-
-
-def deblend(net, images, normalised=False):
-    """
-    Deblend the image using the network
-    parameters:
-        net: neural network used to do the deblending
-        images: array of images. It can contain only one image
-        normalised: boolean to indicate if images need to be normalised
-    """
-    if normalised:
-        # Normalize input images
-        images_normed = np.tanh(np.arcsinh(images))
-        # Denorm output images
-        images = np.sinh(np.arctanh(net.predict(images_normed)))
-
-    return net(tf.cast(images, tf.float32)).mean().numpy(), net(
-        tf.cast(images, tf.float32)
-    )
+from debvader.deblend_cutout.metrics import mse
+from debvader.deblend_cutout.optimization import position_optimization
 
 
 class DeblendField:
