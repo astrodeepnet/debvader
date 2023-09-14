@@ -5,7 +5,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 
 from debvader.model import model
-from debvader.deblend_cutout.metrics import vae_loss
+from debvader.training.metrics import vae_loss
 
 
 def train_network(
@@ -146,7 +146,7 @@ def train_deblender(
 
         data_path = pkg_resources.resource_filename("debvader", "data/")
         path_output = os.path.join(
-            data_path, "weights/", str(from_survey), "not_normalised/"
+            data_path, "weights/", str(from_survey)
         )
 
         print(path_output)

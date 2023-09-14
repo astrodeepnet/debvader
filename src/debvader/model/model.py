@@ -210,7 +210,7 @@ def load_deblender(
 
     # Load the weights corresponding to the chosen survey
     data_path = pkg_resources.resource_filename("debvader", "data/")
-    loading_path = os.path.join(data_path, "weights", survey, "not_normalised", "loss")
+    loading_path = os.path.join(data_path, "weights", survey)
     print(loading_path)
     latest = tf.train.latest_checkpoint(loading_path)
     net.load_weights(latest)
