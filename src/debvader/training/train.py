@@ -4,7 +4,7 @@ import pkg_resources
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
-from debvader.deblend_cutout import model
+from debvader.model import model
 from debvader.deblend_cutout.metrics import vae_loss
 
 

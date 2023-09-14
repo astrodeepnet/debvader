@@ -18,7 +18,7 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.models import Model
 
-from debvader.deblend_cutout.metrics import vae_loss
+from debvader.training.metrics import vae_loss
 
 tfd = tfp.distributions
 
