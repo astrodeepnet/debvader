@@ -9,7 +9,7 @@ from debvader.deblend_cutout.metrics import vae_loss
 
 
 def train_network(
-    net, epochs, training_data, validation_data, batch_size, callbacks, verbose=1
+    net, epochs, training_data, validation_data, batch_size, callbacks=None, verbose=1
 ):
     """
     train a network on data for a fixed number of epochs
@@ -86,6 +86,7 @@ def train_deblender(
     nb_of_bands=6,
     channel_last=True,
     batch_size=5,
+    with_callbacks=False,
     verbose=2,
 ):
     """
@@ -96,7 +97,7 @@ def train_deblender(
     training_data_{}: training data under the format of numpy arrays (inputs, labels) for the vae or the deblender
     validation_data_{}: validation data under the format of numpy arrays (inputs, labels) for the vae or the deblender
     batch_size: size of batch for training
-    callbacks: callbacks wanted for the training
+    with_callbacks: callbacks wanted for the training
     verbose: display of training (1:yes, 2: no)
     """
     # Generate a network for training. The architecture is fixed.
@@ -152,8 +153,11 @@ def train_deblender(
         latest = tf.train.latest_checkpoint(path_output)
         net.load_weights(latest)
 
-    # Define callbacks for VAE
-    callbacks = define_callbacks("vae", survey_name)
+    if with_callbacks:
+        # Define callbacks for VAE
+        callbacks = define_callbacks("vae", survey_name)
+    else:
+        callbacks=None
 
     # Do the training for the VAE
     hist_vae = train_network(
@@ -180,8 +184,11 @@ def train_deblender(
     print("\n\nDeblender model")
     net.summary()
 
-    # Define callbacks for deblender
-    callbacks = define_callbacks("deblender", survey_name)
+    if with_callbacks:
+        # Define callbacks for deblender
+        callbacks = define_callbacks("deblender", survey_name)
+    else:
+        callbacks=None
 
     # Do the training for the deblender
     hist_deblender = train_network(
