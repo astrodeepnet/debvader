@@ -4,7 +4,7 @@ import pandas as pd
 
 from debvader.detect.detection import detect_objects
 from debvader.extract.extraction import extract_cutouts
-from debvader.deblend_cutout.metrics import mse
+from debvader.training.metrics import mse
 from debvader.deblend_cutout.optimization import position_optimization
 from debvader.deblend_cutout.deblender import deblend
 

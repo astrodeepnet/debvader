@@ -2,7 +2,7 @@ import numpy as np
 
 from debvader.deblend.field_deblender import DeblendField
 from debvader.detect.detection import detect_objects
-from debvader.deblend_cutout.metrics import mse
+from debvader.training.metrics import mse
 
 
 class IterativeDeblendField(DeblendField):

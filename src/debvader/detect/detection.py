@@ -16,7 +16,7 @@ def detect_objects(field_image):
 
     r_band_foreground = r_band_data - bkg
 
-    DETECT_THRESH = 0.8
+    DETECT_THRESH = 1.5
     deblend_cont = 0.00001
     deblend_nthresh = 64
     minarea = 4
