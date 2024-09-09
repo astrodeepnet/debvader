@@ -8,3 +8,8 @@ scipy==1.11.2
 sep
 tensorflow==2.13.0
 tensorflow-probability==0.21.0
+
+onnx==1.16.2
+onnxruntime==1.19.2
+tf2onnx==1.16.1
+
