@@ -1,0 +1,12 @@
+# python 3.11.5 is baseline, tested with 3.9.18 and 3.10.9
+jupyter
+matplotlib
+notebook
+numpy==1.24.3
+pandas
+scipy==1.11.2
+sep
+tensorflow==2.13.0
+tensorflow-probability==0.21.0
+tensorflow-metal==1.0.1
+
