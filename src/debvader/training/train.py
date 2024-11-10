@@ -1,9 +1,9 @@
 import os
 
-import pkg_resources
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
+from debvader import DATADIR
 from debvader.model import model
 from debvader.training.metrics import vae_loss
 
@@ -46,10 +46,8 @@ def define_callbacks(vae_or_deblender, survey_name):
         vae_or_deblender: training a VAE or a deblender. Used for the saving path.
         survey_name: name of the survey from which the data comes. Used for the saving path.
     """
-    data_path = pkg_resources.resource_filename("debvader", "data/")
-
     saving_path = os.path.join(
-        data_path, "weights/", str(survey_name), str(vae_or_deblender), ""
+        DATADIR, "weights/", str(survey_name), str(vae_or_deblender), ""
     )
     checkpointer_val_mse = tf.keras.callbacks.ModelCheckpoint(
         filepath=saving_path + "val_mse/weights_noisy_v4.ckpt",
@@ -143,11 +141,7 @@ def train_deblender(
 
     # Start from the weights of an already trained network (recommended if possible)
     if from_survey is not None:
-
-        data_path = pkg_resources.resource_filename("debvader", "data/")
-        path_output = os.path.join(
-            data_path, "weights/", str(from_survey)
-        )
+        path_output = os.path.join(DATADIR, "weights", str(from_survey))
 
         print(path_output)
         latest = tf.train.latest_checkpoint(path_output)
@@ -157,7 +151,7 @@ def train_deblender(
         # Define callbacks for VAE
         callbacks = define_callbacks("vae", survey_name)
     else:
-        callbacks=None
+        callbacks = None
 
     # Do the training for the VAE
     hist_vae = train_network(
@@ -188,7 +182,7 @@ def train_deblender(
         # Define callbacks for deblender
         callbacks = define_callbacks("deblender", survey_name)
     else:
-        callbacks=None
+        callbacks = None
 
     # Do the training for the deblender
     hist_deblender = train_network(
