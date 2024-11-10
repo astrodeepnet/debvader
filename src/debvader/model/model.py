@@ -1,10 +1,8 @@
 import os
 
 import numpy as np
-import pkg_resources
 import tensorflow as tf
 import tensorflow_probability as tfp
-from tensorflow_probability.python.math import fill_triangular
 from tensorflow.keras.layers import (
     BatchNormalization,
     Conv2D,
@@ -17,7 +15,9 @@ from tensorflow.keras.layers import (
     Reshape,
 )
 from tensorflow.keras.models import Model
+from tensorflow_probability.python.math import fill_triangular
 
+from debvader import DATADIR
 from debvader.training.metrics import vae_loss
 
 tfd = tfp.distributions
@@ -259,8 +259,7 @@ def load_deblender(
     )
 
     # Load the weights corresponding to the chosen survey
-    data_path = pkg_resources.resource_filename("debvader", "data/")
-    loading_path = os.path.join(data_path, "weights", survey)
+    loading_path = os.path.join(DATADIR, "weights", survey)
     print(loading_path)
     latest = tf.train.latest_checkpoint(loading_path)
     net.load_weights(latest)
